@@ -62,6 +62,11 @@ interface PlaygroundState extends MultiFileState {
 		| null;
 	showComplexityVisualization: boolean;
 
+	// 递归追踪状态
+	traceStepIndex: number;
+	traceIsPlaying: boolean;
+	tracePlaySpeed: number;
+
 	// Actions (保持向后兼容)
 	setCode: (code: string) => void;
 	setLanguage: (language: "javascript" | "typescript") => void;
@@ -82,6 +87,11 @@ interface PlaygroundState extends MultiFileState {
 			| null,
 	) => void;
 	toggleComplexityVisualization: () => void;
+
+	// 递归追踪 Actions
+	setTraceStepIndex: (index: number) => void;
+	setTraceIsPlaying: (playing: boolean) => void;
+	setTracePlaySpeed: (speed: number) => void;
 
 	// 持久化
 	loadFromStorage: () => void;
@@ -306,6 +316,11 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 	complexityResult: null,
 	showComplexityVisualization: false,
 
+	// 递归追踪初始状态
+	traceStepIndex: 0,
+	traceIsPlaying: false,
+	tracePlaySpeed: 500,
+
 	// 多文件系统状态
 	files: {},
 	folders: {},
@@ -408,6 +423,19 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 		}));
 	},
 
+	// 递归追踪 Actions
+	setTraceStepIndex: (index: number) => {
+		set({ traceStepIndex: index });
+	},
+
+	setTraceIsPlaying: (playing: boolean) => {
+		set({ traceIsPlaying: playing });
+	},
+
+	setTracePlaySpeed: (speed: number) => {
+		set({ tracePlaySpeed: speed });
+	},
+
 	resetToDefault: () => {
 		const { language, codeHistory } = get();
 		const defaultCodeForLanguage = defaultCode[language];
@@ -454,6 +482,11 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 			isAnalyzingComplexity: false,
 			complexityResult: null,
 			showComplexityVisualization: false,
+
+			// 递归追踪状态
+			traceStepIndex: 0,
+			traceIsPlaying: false,
+			tracePlaySpeed: 500,
 
 			// 多文件系统状态
 			files: {},

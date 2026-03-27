@@ -32,6 +32,24 @@ export interface TestExecutionResults {
 	duration: number;
 }
 
+export interface TraceStep {
+	stepIndex: number;
+	functionName: string;
+	action: "enter" | "exit";
+	args: string[];
+	returnValue?: string;
+	depth: number;
+	line: number;
+	timestamp: number;
+}
+
+export interface RecursiveTrace {
+	steps: TraceStep[];
+	maxDepth: number;
+	totalCalls: number;
+	truncated: boolean;
+}
+
 export interface ExecutionResult {
 	success: boolean;
 	logs: string[];
@@ -39,6 +57,7 @@ export interface ExecutionResult {
 	executionTime: number;
 	visualizations: VisualizationData[];
 	testResults?: TestExecutionResults;
+	trace?: RecursiveTrace;
 }
 
 export class CodeExecutionService {

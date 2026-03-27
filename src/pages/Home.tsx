@@ -1,4 +1,5 @@
 import {
+	Activity,
 	Code2,
 	FileDiff,
 	Github,
@@ -30,6 +31,7 @@ import LanguageSwitch from "@/components/LanguageSwitch";
 import OutputDisplay from "@/components/OutputDisplay";
 import PredefinedFunctions from "@/components/PredefinedFunctions";
 import ProblemsPanel from "@/components/ProblemsPanel";
+import RecursiveTraceVisualization from "@/components/RecursiveTraceVisualization";
 import { ScratchpadPanel } from "@/components/ScratchpadPanel";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import TabManager from "@/components/TabManager";
@@ -68,6 +70,12 @@ export default function Home() {
 		setAnalyzingComplexity,
 		setComplexityResult,
 		toggleComplexityVisualization,
+		traceStepIndex,
+		traceIsPlaying,
+		tracePlaySpeed,
+		setTraceStepIndex,
+		setTraceIsPlaying,
+		setTracePlaySpeed,
 	} = usePlaygroundStore();
 	const { t, i18n } = useTranslation();
 
@@ -93,6 +101,22 @@ export default function Home() {
 	// Problems 状态
 	const [markers, setMarkers] = useState<monaco.editor.IMarker[]>([]);
 	const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+
+	// Trace 高亮状态
+	const [highlightLine, setHighlightLine] = useState<number | null>(null);
+
+	// 同步 trace 步骤到编辑器高亮
+	useEffect(() => {
+		const trace = executionResult?.trace;
+		if (!trace || trace.steps.length === 0) {
+			setHighlightLine(null);
+			return;
+		}
+		const step = trace.steps[traceStepIndex];
+		if (step) {
+			setHighlightLine(step.line);
+		}
+	}, [traceStepIndex, executionResult?.trace]);
 
 	// 获取当前活跃文件的代码
 	const getCurrentCode = useCallback(() => {
@@ -121,6 +145,9 @@ export default function Home() {
 		if (isExecuting) return;
 		setExecuting(true);
 		clearOutput();
+		setTraceStepIndex(0);
+		setTraceIsPlaying(false);
+		setHighlightLine(null);
 		try {
 			const codeToRun = getCurrentCode();
 			const languageToUse = getCurrentLanguage();
@@ -189,6 +216,8 @@ export default function Home() {
 		getCurrentLanguage,
 		setExecutionResult,
 		setExecuting,
+		setTraceStepIndex,
+		setTraceIsPlaying,
 	]);
 
 	// 使用指定的代码和语言运行代码
@@ -716,6 +745,7 @@ export default function Home() {
 														onEditorMounted={(editor) => {
 															editorRef.current = editor;
 														}}
+														highlightLine={highlightLine}
 													/>
 												) : (
 													<div className="h-full flex items-center justify-center bg-muted/30">
@@ -776,6 +806,19 @@ export default function Home() {
 														<TabsTrigger value="predefined" className="gap-2">
 															{t("predefined.tab")}
 														</TabsTrigger>
+														{executionResult?.trace &&
+															executionResult.trace.steps.length > 0 && (
+																<TabsTrigger value="trace" className="gap-2">
+																	<Activity className="h-3.5 w-3.5" />
+																	Trace
+																	<Badge
+																		variant="secondary"
+																		className="text-xs font-mono bg-muted/50"
+																	>
+																		{executionResult.trace.totalCalls}
+																	</Badge>
+																</TabsTrigger>
+															)}
 													</TabsList>
 												</div>
 												<div className="flex-1 min-h-0">
@@ -827,6 +870,25 @@ export default function Home() {
 													>
 														<PredefinedFunctions />
 													</TabsContent>
+													{executionResult?.trace &&
+														executionResult.trace.steps.length > 0 && (
+															<TabsContent
+																value="trace"
+																className="h-full m-0 p-0"
+															>
+																<RecursiveTraceVisualization
+																	trace={executionResult.trace}
+																	currentStepIndex={traceStepIndex}
+																	onStepChange={setTraceStepIndex}
+																	isPlaying={traceIsPlaying}
+																	onPlayToggle={() =>
+																		setTraceIsPlaying(!traceIsPlaying)
+																	}
+																	playSpeed={tracePlaySpeed}
+																	onSpeedChange={setTracePlaySpeed}
+																/>
+															</TabsContent>
+														)}
 												</div>
 											</Tabs>
 										</div>

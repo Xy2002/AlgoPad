@@ -224,5 +224,20 @@
 	"scratchpad": {
 		"title": "便签板",
 		"toolTip": "Markdown 笔记"
+	},
+	"trace": {
+		"title": "追踪",
+		"step": "步骤",
+		"enter": "进入",
+		"exit": "退出",
+		"callStack": "调用栈",
+		"arguments": "参数",
+		"returnValue": "返回值",
+		"depth": "深度",
+		"totalCalls": "总调用次数",
+		"maxDepth": "最大深度",
+		"truncated": "追踪在 {{max}} 步时被截断",
+		"noTrace": "未检测到递归函数。",
+		"speed": "速度"
 	}
 }

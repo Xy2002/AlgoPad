@@ -33,6 +33,7 @@ interface CodeEditorProps {
 	filePath: string;
 	onMarkersChange?: (markers: monaco.editor.IMarker[]) => void;
 	onEditorMounted?: (editor: monaco.editor.IStandaloneCodeEditor) => void;
+	highlightLine?: number | null;
 }
 
 export default function CodeEditor({
@@ -45,6 +46,7 @@ export default function CodeEditor({
 	filePath,
 	onMarkersChange,
 	onEditorMounted,
+	highlightLine,
 }: CodeEditorProps) {
 	const { t } = useTranslation();
 	const { llmSettings, toggleLlmEnabled, files, fileContents } =
@@ -52,6 +54,7 @@ export default function CodeEditor({
 	const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 	const monacoRef = useRef<typeof monaco | null>(null);
 	const completionRegistrationRef = useRef<CompletionRegistration | null>(null);
+	const decorationCollectionRef = useRef<monaco.editor.IEditorDecorationsCollection | null>(null);
 	const [isEditorReady, setIsEditorReady] = useState(false);
 
 	// 计算Inactive的原因
@@ -89,8 +92,46 @@ export default function CodeEditor({
 				completionRegistrationRef.current.deregister();
 				completionRegistrationRef.current = null;
 			}
+			if (decorationCollectionRef.current) {
+				decorationCollectionRef.current.clear();
+			}
 		};
 	}, []);
+
+	// Trace line highlighting
+	useEffect(() => {
+		const editor = editorRef.current;
+		const monacoInstance = monacoRef.current;
+		if (!editor || !monacoInstance || !isEditorReady) return;
+
+		if (highlightLine === null || highlightLine === undefined) {
+			if (decorationCollectionRef.current) {
+				decorationCollectionRef.current.clear();
+			}
+			return;
+		}
+
+		if (!decorationCollectionRef.current) {
+			decorationCollectionRef.current = editor.createDecorationsCollection([]);
+		}
+
+		decorationCollectionRef.current.set([
+			{
+				range: new monacoInstance.Range(highlightLine, 1, highlightLine, 1),
+				options: {
+					isWholeLine: true,
+					className: "trace-highlight-line",
+					linesDecorationsClassName: "trace-highlight-line-decoration",
+					overviewRuler: {
+						color: "rgba(245, 158, 11, 0.6)",
+						position: monacoInstance.editor.OverviewRulerLane.Full,
+					},
+				},
+			},
+		]);
+
+		editor.revealLineInCenter(highlightLine);
+	}, [highlightLine, isEditorReady]);
 
 	// Dynamic registration logic based on settings
 	useEffect(() => {

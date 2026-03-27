@@ -1006,11 +1006,153 @@ self.onmessage = async (e) => {
 
 		const it = test; // Alias
 
+		// ===== 递归函数追踪系统 =====
+		const MAX_TRACE_STEPS = 10000;
+		const __traceContext = {
+			steps: [],
+			state: { depth: 0, startTime: 0 },
+			maxSteps: MAX_TRACE_STEPS,
+		};
+
+		function __traceArgs(args) {
+			const result = [];
+			for (let i = 0; i < args.length; i++) {
+				try {
+					result.push(safeStringify(args[i]));
+				} catch (_e) {
+					result.push("[Error serializing]");
+				}
+			}
+			return result;
+		}
+
+		// 检测递归函数声明（function name(...) { ... }）
+		function detectRecursiveFunctions(code) {
+			const recursiveFunctions = [];
+			const funcRegex = /function\s+(\w+)\s*\([^)]*\)\s*\{/g;
+
+			let match = funcRegex.exec(code);
+			while (match !== null) {
+				const funcName = match[1];
+				const funcStart = match.index;
+				const funcDeclLine = code.substring(0, funcStart).split("\n").length;
+
+				// 找到函数体（bodyStart 已跳过开头的 {，所以从 1 开始计数）
+				let braceCount = 1;
+				const bodyStart = funcStart + match[0].length;
+				let bodyEnd = bodyStart;
+				for (let i = bodyStart; i < code.length; i++) {
+					if (code[i] === "{") braceCount++;
+					else if (code[i] === "}") {
+						braceCount--;
+						if (braceCount === 0) {
+							bodyEnd = i;
+							break;
+						}
+					}
+				}
+
+				const body = code.substring(bodyStart, bodyEnd);
+				// 检查函数体内是否调用了自身
+				const callRegex = new RegExp(`\\b${funcName}\\s*\\(`, "g");
+				const calls = body.match(callRegex);
+
+				if (calls && calls.length > 0) {
+					recursiveFunctions.push({
+						name: funcName,
+						startLine: funcDeclLine,
+						funcDeclStart: funcStart,
+						funcNameStart: funcStart + match[0].indexOf(funcName),
+						funcNameEnd: funcStart + match[0].indexOf(funcName) + funcName.length,
+						bodyStart,
+						bodyEnd,
+					});
+				}
+				match = funcRegex.exec(code);
+			}
+
+			return recursiveFunctions;
+		}
+
+		// 对检测到的递归函数进行插桩
+		function instrumentRecursiveFunctions(code) {
+			const recursiveFuncs = detectRecursiveFunctions(code);
+			if (recursiveFuncs.length === 0) return { code, hasRecursion: false };
+
+			let result = code;
+
+			// 从后向前处理，避免位置偏移
+			for (let i = recursiveFuncs.length - 1; i >= 0; i--) {
+				const func = recursiveFuncs[i];
+				const originalName = func.name;
+				const backupName = `__orig_${originalName}`;
+
+				// 步骤1：重命名原函数 function fibonacci -> function __orig_fibonacci
+				result =
+					result.substring(0, func.funcNameStart) +
+					backupName +
+					result.substring(func.funcNameEnd);
+
+				// 步骤2：在重命名的函数声明前插入包装函数
+				const wrapperCode =
+					`var ${originalName} = function ${originalName}() {\n` +
+					`  if (__traceContext.steps.length < __traceContext.maxSteps) {\n` +
+					`    __traceContext.steps.push({\n` +
+					`      stepIndex: __traceContext.steps.length,\n` +
+					`      functionName: "${originalName}",\n` +
+					`      action: "enter",\n` +
+					`      args: __traceArgs(arguments),\n` +
+					`      depth: __traceContext.state.depth,\n` +
+					`      line: ${func.startLine},\n` +
+					`      timestamp: performance.now() - __traceContext.state.startTime\n` +
+					`    });\n` +
+					`  }\n` +
+					`  __traceContext.state.depth++;\n` +
+					`  var __traceResult;\n` +
+					`  try {\n` +
+					`    __traceResult = ${backupName}.apply(this, arguments);\n` +
+					`  } finally {\n` +
+					`    __traceContext.state.depth--;\n` +
+					`    if (__traceContext.steps.length < __traceContext.maxSteps) {\n` +
+					`      __traceContext.steps.push({\n` +
+					`        stepIndex: __traceContext.steps.length,\n` +
+					`        functionName: "${originalName}",\n` +
+					`        action: "exit",\n` +
+					`        args: __traceArgs(arguments),\n` +
+					`        returnValue: __safeStringify(__traceResult),\n` +
+					`        depth: __traceContext.state.depth,\n` +
+					`        line: ${func.startLine},\n` +
+					`        timestamp: performance.now() - __traceContext.state.startTime\n` +
+					`      });\n` +
+					`    }\n` +
+					`  }\n` +
+					`  return __traceResult;\n` +
+					`};\n`;
+
+				// 在 function __orig_xxx 之前插入包装函数
+				const origFuncKeywordPos = result.indexOf(
+					`function ${backupName}`,
+					func.funcDeclStart - 50 > 0 ? func.funcDeclStart - 50 : 0,
+				);
+				if (origFuncKeywordPos !== -1) {
+					result =
+						result.substring(0, origFuncKeywordPos) +
+						wrapperCode +
+						result.substring(origFuncKeywordPos);
+				}
+			}
+
+			return { code: result, hasRecursion: true };
+		}
+
 		// 创建受限的全局环境
 		const safeGlobals = {
 			console: mockConsole,
 			renderHeap,
 			renderTree,
+			__traceContext,
+			__safeStringify: safeStringify,
+			__traceArgs,
 			Math,
 			Date,
 			JSON,
@@ -1252,8 +1394,8 @@ self.onmessage = async (e) => {
 				},
 			);
 
-			// Wrap in module function that provides exports and __require
-			return `(function(exports, __require, __currentFilePath) {
+		// Wrap in module function that provides exports, __require, and trace context
+			return `(function(exports, __require, __currentFilePath, __traceContext, __safeStringify, __traceArgs) {
 ${transformedCode}
 return exports;
 })`;
@@ -1298,7 +1440,7 @@ return exports;
 						exports,
 						moduleRequire,
 						resolvedPath,
-					);
+						);
 
 					// Cache the exports
 					moduleCache[resolvedPath] = executedModule || exports;
@@ -1355,6 +1497,9 @@ return exports;
 					"setInterval",
 					"clearTimeout",
 					"clearInterval",
+					"__traceContext",
+					"__safeStringify",
+					"__traceArgs",
 					`return ${moduleFunction}`,
 				);
 
@@ -1392,10 +1537,13 @@ return exports;
 					safeGlobals.setInterval,
 					clearTimeout,
 					clearInterval,
+					__traceContext,
+					safeStringify,
+					__traceArgs,
 				);
 
 				// Execute the module function
-				return actualModuleFunction(exports, requireFn, currentPath);
+				return actualModuleFunction(exports, requireFn, currentPath, __traceContext, safeStringify, __traceArgs);
 			} catch (error) {
 				console.error("Error executing module code:", currentPath, error);
 				throw error;
@@ -1444,6 +1592,9 @@ return exports;
 		// 重写循环相关的全局函数来检测死循环
 		const instrumentedGlobals = {
 			...executionContext,
+			__traceContext,
+			__safeStringify: safeStringify,
+			__traceArgs,
 			// 重写console以在每次调用时更新检测时间
 			console: {
 				...mockConsole,
@@ -1465,6 +1616,18 @@ return exports;
 				},
 			},
 		};
+
+		let hasRecursion = false;
+
+		// 对多文件模式中的每个文件进行插桩
+		if (allFiles) {
+			for (const [filePath, content] of Object.entries(transpiledModules)) {
+				const { code: instrumented, hasRecursion: found } =
+					instrumentRecursiveFunctions(content);
+				if (found) hasRecursion = true;
+				transpiledModules[filePath] = instrumented;
+			}
+		}
 
 		// 简化执行代码，依赖超时机制来处理死循环
 		let instrumentedCode;
@@ -1501,6 +1664,18 @@ return exports;
 				executableCode = code;
 			}
 
+			// 对单文件代码进行递归插桩
+			try {
+				const {
+					code: singleInstrumented,
+					hasRecursion: singleFound,
+				} = instrumentRecursiveFunctions(executableCode);
+				if (singleFound) hasRecursion = true;
+				executableCode = singleInstrumented;
+			} catch (instrError) {
+				console.error("递归插桩失败，使用原始代码:", instrError.message);
+			}
+
 			instrumentedCode = `try { ${executableCode} } catch (error) { throw error; }`;
 
 			// 创建函数来执行代码
@@ -1511,7 +1686,20 @@ return exports;
 		}
 
 		const startTime = performance.now();
+		__traceContext.state.startTime = startTime;
 		console.log("开始执行代码");
+
+		// 构建递归追踪结果
+		function buildTraceResult() {
+			if (!hasRecursion || __traceContext.steps.length === 0) return undefined;
+			return {
+				steps: __traceContext.steps,
+				maxDepth: Math.max(0, ...__traceContext.steps.map((s) => s.depth)),
+				totalCalls: __traceContext.steps.filter((s) => s.action === "enter")
+					.length,
+				truncated: __traceContext.steps.length >= MAX_TRACE_STEPS,
+			};
+		}
 
 		// 添加执行超时保护，但保留已收集的输出
 		let executionCompleted = false;
@@ -1540,6 +1728,7 @@ return exports;
 					executionTime: 3000,
 					executionId,
 					visualizations,
+					trace: buildTraceResult(),
 					testResults:
 						testResults.suites.length > 0
 							? {
@@ -1606,6 +1795,7 @@ return exports;
 				executionTime: Math.round(executionTime * 100) / 100,
 				executionId,
 				visualizations,
+				trace: buildTraceResult(),
 				testResults:
 					testResults.suites.length > 0
 						? {
@@ -1657,6 +1847,7 @@ return exports;
 				executionTime: Math.round(executionTime * 100) / 100,
 				executionId,
 				visualizations,
+				trace: buildTraceResult(),
 				testResults:
 					testResults.suites.length > 0
 						? {

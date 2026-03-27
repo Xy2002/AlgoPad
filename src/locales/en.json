@@ -167,5 +167,20 @@
 	"scratchpad": {
 		"title": "Scratchpad",
 		"toolTip": "Markdown Notes"
+	},
+	"trace": {
+		"title": "Trace",
+		"step": "Step",
+		"enter": "Enter",
+		"exit": "Exit",
+		"callStack": "Call Stack",
+		"arguments": "Arguments",
+		"returnValue": "Return Value",
+		"depth": "Depth",
+		"totalCalls": "Total Calls",
+		"maxDepth": "Max Depth",
+		"truncated": "Trace was truncated at {{max}} steps",
+		"noTrace": "No recursive functions detected.",
+		"speed": "Speed"
 	}
 }
