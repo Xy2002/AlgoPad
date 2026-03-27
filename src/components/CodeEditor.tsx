@@ -64,6 +64,15 @@ export default function CodeEditor({
 		useRef<monaco.editor.IEditorDecorationsCollection | null>(null);
 	const [isEditorReady, setIsEditorReady] = useState(false);
 
+	// Reset refs when component remounts after unmount
+	useEffect(() => {
+		return () => {
+			editorRef.current = null;
+			monacoRef.current = null;
+			setIsEditorReady(false);
+		};
+	}, []);
+
 	// 计算Inactive的原因
 	const inactiveReason = useMemo(() => {
 		if (!llmSettings.enabled) {
@@ -102,6 +111,21 @@ export default function CodeEditor({
 			if (decorationCollectionRef.current) {
 				decorationCollectionRef.current.clear();
 			}
+		};
+	}, []);
+
+	// Track marker polling timers for cleanup
+	const markerPollTimersRef = useRef<{
+		pollTimer: NodeJS.Timeout | null;
+		activePollInterval: NodeJS.Timeout | null;
+	}>({ pollTimer: null, activePollInterval: null });
+
+	// Cleanup marker polling on unmount
+	useEffect(() => {
+		return () => {
+			const { pollTimer, activePollInterval } = markerPollTimersRef.current;
+			if (activePollInterval) clearInterval(activePollInterval);
+			if (pollTimer) clearTimeout(pollTimer);
 		};
 	}, []);
 
@@ -286,13 +310,18 @@ export default function CodeEditor({
 				clearTimeout(pollTimer);
 			}
 
+			// Store refs for cleanup on unmount
+			markerPollTimersRef.current = { pollTimer: null, activePollInterval: null };
+
 			// 高频轮询：用户正在输入，每 100ms 检查一次
 			activePollInterval = setInterval(() => {
 				updateMarkers();
 			}, 100);
+			markerPollTimersRef.current.activePollInterval = activePollInterval;
 
 			// 2秒后降低频率
 			pollTimer = setTimeout(() => {
+				markerPollTimersRef.current.pollTimer = null;
 				if (activePollInterval) {
 					clearInterval(activePollInterval);
 				}
@@ -301,9 +330,11 @@ export default function CodeEditor({
 				activePollInterval = setInterval(() => {
 					updateMarkers();
 				}, 500);
+				markerPollTimersRef.current.activePollInterval = activePollInterval;
 
 				// 再过 3 秒停止轮询
 				pollTimer = setTimeout(() => {
+					markerPollTimersRef.current.pollTimer = null;
 					if (activePollInterval) {
 						clearInterval(activePollInterval);
 						activePollInterval = null;
@@ -319,6 +350,7 @@ export default function CodeEditor({
 
 		// 启动初始轮询
 		startActivePolling();
+		markerPollTimersRef.current = { pollTimer, activePollInterval };
 
 		// 检测是否为移动设备
 		const isMobile = window.innerWidth < 768;

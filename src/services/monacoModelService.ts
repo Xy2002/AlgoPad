@@ -18,6 +18,17 @@ export class MonacoModelService {
 	}
 
 	/**
+	 * Check if a model is still valid (not disposed)
+	 */
+	private isModelAlive(model: monaco.editor.ITextModel): boolean {
+		try {
+			return !model.isDisposed();
+		} catch {
+			return false;
+		}
+	}
+
+	/**
 	 * Create or update a model for a file
 	 */
 	createOrUpdateModel(
@@ -30,14 +41,19 @@ export class MonacoModelService {
 			return null;
 		}
 
-		// Check if model already exists
+		// Check if model already exists and is still valid
 		const existingModel = this.models.get(fileId);
-		if (existingModel) {
+		if (existingModel && this.isModelAlive(existingModel)) {
 			// Update existing model content
 			if (existingModel.getValue() !== content) {
 				existingModel.setValue(content);
 			}
 			return existingModel;
+		}
+
+		// Clean up stale reference to a disposed model
+		if (existingModel) {
+			this.models.delete(fileId);
 		}
 
 		// Determine language from file extension
@@ -91,7 +107,7 @@ export class MonacoModelService {
 	 */
 	updateModelContent(fileId: string, content: string): void {
 		const model = this.models.get(fileId);
-		if (model && model.getValue() !== content) {
+		if (model && this.isModelAlive(model) && model.getValue() !== content) {
 			model.setValue(content);
 		}
 	}
@@ -109,10 +125,12 @@ export class MonacoModelService {
 		// Get current file IDs
 		const currentFileIds = new Set(Object.keys(files));
 
-		// Remove models for deleted files
+		// Remove models for deleted files or disposed models
 		for (const [fileId, model] of this.models.entries()) {
-			if (!currentFileIds.has(fileId)) {
-				model.dispose();
+			if (!currentFileIds.has(fileId) || !this.isModelAlive(model)) {
+				if (this.isModelAlive(model)) {
+					model.dispose();
+				}
 				this.models.delete(fileId);
 			}
 		}
