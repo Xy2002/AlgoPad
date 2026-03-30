@@ -149,10 +149,7 @@ export class CodeExecutionService {
 						);
 					} else {
 						this.swcLoadError = event.data.error;
-						console.warn(
-							"⚠️ 主线程收到SWC初始化失败通知:",
-							event.data.error,
-						);
+						console.warn("⚠️ 主线程收到SWC初始化失败通知:", event.data.error);
 					}
 					this.notifyProgress();
 				}

@@ -52,9 +52,7 @@ export function SwcLoadingToast({ progress, onRetry }: SwcLoadingToastProps) {
 			<div className="px-4 py-3">
 				<div className="flex items-center gap-2">
 					<CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" />
-					<p className="text-[13px] font-medium">
-						{t("swcLoading.ready")}
-					</p>
+					<p className="text-[13px] font-medium">{t("swcLoading.ready")}</p>
 				</div>
 			</div>
 		);
@@ -89,9 +87,7 @@ export function SwcLoadingToast({ progress, onRetry }: SwcLoadingToastProps) {
 			{/* Header */}
 			<div className="flex items-center gap-2 mb-2.5">
 				<Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin text-[hsl(var(--vercel-blue))]" />
-				<p className="text-[13px] font-medium">
-					{t("swcLoading.title")}
-				</p>
+				<p className="text-[13px] font-medium">{t("swcLoading.title")}</p>
 			</div>
 
 			{/* Progress bar */}

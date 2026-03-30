@@ -64,9 +64,7 @@ async function initSWC() {
 
 		const wasmResponse = await fetch(wasmUrl);
 		if (!wasmResponse.ok) {
-			throw new Error(
-				`Failed to fetch WASM: HTTP ${wasmResponse.status}`,
-			);
+			throw new Error(`Failed to fetch WASM: HTTP ${wasmResponse.status}`);
 		}
 
 		let loadedBytes = 0;

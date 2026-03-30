@@ -677,11 +677,7 @@ export default function Home() {
 								<Square className="w-3.5 h-3.5" />
 							</Button>
 						) : isSwcLoading || isSwcError ? (
-							<Button
-								size="sm"
-								disabled
-								title={t("swcLoading.buttonTooltip")}
-							>
+							<Button size="sm" disabled title={t("swcLoading.buttonTooltip")}>
 								<Play className="w-3.5 h-3.5 animate-pulse" />
 								<span className="hidden sm:inline ml-1 text-xs">
 									{t("swcLoading.loading")}
