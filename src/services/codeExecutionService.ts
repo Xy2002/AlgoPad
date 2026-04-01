@@ -1,78 +1,20 @@
-export interface VisualizationData {
-	type: "heap" | "tree" | "graph" | "array";
-	data: unknown;
-	timestamp: number;
-	label?: string;
-	changes?: {
-		heap?: number[]; // Changed indices for heap visualization
-		tree?: string[]; // Changed node paths for tree visualization
-	};
-}
+import type {
+	ExecutionResult,
+	SWCLoadProgress,
+} from "@/workers/types";
 
-export interface TestResult {
-	status: "passed" | "failed" | "skipped";
-	name: string;
-	error?: string;
-	duration?: number;
-}
-
-export interface TestSuite {
-	name: string;
-	tests: TestResult[];
-	status: "passed" | "failed" | "skipped";
-	duration: number;
-}
-
-export interface TestExecutionResults {
-	hasTests: boolean;
-	suites: TestSuite[];
-	totalTests: number;
-	passed: number;
-	failed: number;
-	duration: number;
-}
-
-export interface TraceStep {
-	stepIndex: number;
-	functionName: string;
-	action: "enter" | "exit";
-	args: string[];
-	returnValue?: string;
-	depth: number;
-	line: number;
-	startCol: number;
-	endCol: number;
-	timestamp: number;
-}
-
-export interface RecursiveTrace {
-	steps: TraceStep[];
-	maxDepth: number;
-	totalCalls: number;
-	truncated: boolean;
-}
-
-export interface ExecutionResult {
-	success: boolean;
-	logs: string[];
-	errors: string[];
-	executionTime: number;
-	visualizations: VisualizationData[];
-	testResults?: TestExecutionResults;
-	trace?: RecursiveTrace;
-}
-
-export interface SWCLoadProgress {
-	state: "loading" | "ready" | "error";
-	step: number;
-	totalSteps: number;
-	stepLabel: string;
-	loaded: number;
-	total: number | null;
-	percent: number | null;
-	error: string | null;
-	initTime: number | null;
-}
+// Re-export types from the worker module for backward compatibility
+export type {
+	VisualizationData,
+	TestResult,
+	TestSuite,
+	TestExecutionResults,
+	TraceStep,
+	RecursiveTrace,
+	ExecutionResult,
+	SWCLoadProgress,
+} from "@/workers/types";
+import ExecutionWorker from "@/workers/execution.worker?worker";
 
 type ProgressCallback = (progress: SWCLoadProgress) => void;
 
@@ -107,8 +49,8 @@ export class CodeExecutionService {
 			this.swcProgress = null;
 			this.swcLoadError = null;
 
-			// Create Web Worker from external file
-			this.worker = new Worker("/execution.worker.js");
+			// Create Web Worker (Vite-bundled)
+			this.worker = new ExecutionWorker();
 
 			// 监听SWC初始化状态事件和进度事件
 			this.worker.addEventListener("message", (event) => {
