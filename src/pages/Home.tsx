@@ -44,7 +44,12 @@ import { PageTransition } from "@/components/ui/motion";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/components/ui/sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { executeCode, stopExecution } from "@/services/codeExecutionService";
+import {
+	executeCode,
+	executeInlineEval,
+	stopExecution,
+} from "@/services/codeExecutionService";
+import type { InlineEvalResult } from "@/services/codeExecutionService";
 import {
 	codeExecutionService,
 	type SWCLoadProgress,
@@ -82,6 +87,7 @@ export default function Home() {
 		setTraceStepIndex,
 		setTraceIsPlaying,
 		setTracePlaySpeed,
+		fileContents,
 	} = usePlaygroundStore();
 	const { t, i18n } = useTranslation();
 
@@ -118,6 +124,11 @@ export default function Home() {
 	// SWC 加载状态
 	const [swcProgress, setSwcProgress] = useState<SWCLoadProgress | null>(null);
 	const swcToastIdRef = useRef<string | number | null>(null);
+
+	const [inlineEvalResults, setInlineEvalResults] = useState<
+		InlineEvalResult[]
+	>([]);
+	const inlineEvalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	useEffect(() => {
 		const unsubscribe = codeExecutionService.onProgress(setSwcProgress);
@@ -194,6 +205,42 @@ export default function Home() {
 			});
 		}
 	}, [traceStepIndex, executionResult?.trace]);
+
+	// Inline expression evaluation on code change (debounced)
+	useEffect(() => {
+		// Clear previous timer
+		if (inlineEvalTimerRef.current) {
+			clearTimeout(inlineEvalTimerRef.current);
+		}
+
+		// Clear results immediately while typing
+		setInlineEvalResults([]);
+
+		const currentCode = getCurrentCode();
+		const currentLang = getCurrentLanguage();
+
+		if (!currentCode.trim()) {
+			return;
+		}
+
+		inlineEvalTimerRef.current = setTimeout(async () => {
+			try {
+				const results = await executeInlineEval(
+					currentCode,
+					currentLang as "javascript" | "typescript",
+				);
+				setInlineEvalResults(results);
+			} catch {
+				setInlineEvalResults([]);
+			}
+		}, 500);
+
+		return () => {
+			if (inlineEvalTimerRef.current) {
+				clearTimeout(inlineEvalTimerRef.current);
+			}
+		};
+	}, [code, activeFileId, fileContents]);
 
 	// 获取当前活跃文件的代码
 	const getCurrentCode = useCallback(() => {
@@ -573,6 +620,9 @@ export default function Home() {
 			if (progressClearTimerRef.current) {
 				clearInterval(progressClearTimerRef.current);
 			}
+			if (inlineEvalTimerRef.current) {
+				clearTimeout(inlineEvalTimerRef.current);
+			}
 		};
 	}, []);
 
@@ -791,6 +841,7 @@ export default function Home() {
 															editorRef.current = editor;
 														}}
 														highlightRange={highlightRange}
+														inlineEvalResults={inlineEvalResults}
 													/>
 												) : (
 													<div className="h-full flex items-center justify-center bg-muted/30">
