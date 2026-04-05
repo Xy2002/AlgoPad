@@ -1,4 +1,8 @@
-import type { ExecutionResult, SWCLoadProgress } from "@/workers/types";
+import type {
+	ExecutionResult,
+	InlineEvalResult,
+	SWCLoadProgress,
+} from "@/workers/types";
 
 // Re-export types from the worker module for backward compatibility
 export type {
@@ -9,6 +13,7 @@ export type {
 	TraceStep,
 	RecursiveTrace,
 	ExecutionResult,
+	InlineEvalResult,
 	SWCLoadProgress,
 } from "@/workers/types";
 import ExecutionWorker from "@/workers/execution.worker?worker";
@@ -282,6 +287,46 @@ export class CodeExecutionService {
 		});
 	}
 
+	async executeInlineEval(
+		code: string,
+		language: "javascript" | "typescript",
+	): Promise<InlineEvalResult[]> {
+		if (!this.worker || this.isExecuting) {
+			return [];
+		}
+
+		const executionId = `ie_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+		return new Promise((resolve) => {
+			const timeout = setTimeout(() => {
+				this.worker?.removeEventListener("message", handleMessage);
+				resolve([]);
+			}, 3000);
+
+			const handleMessage = (event: MessageEvent) => {
+				const data = event.data;
+				if (
+					data.type !== "inline-eval-result" ||
+					data.executionId !== executionId
+				) {
+					return;
+				}
+
+				clearTimeout(timeout);
+				this.worker?.removeEventListener("message", handleMessage);
+				resolve(data.results || []);
+			};
+
+			this.worker.addEventListener("message", handleMessage);
+			this.worker.postMessage({
+				type: "inline-eval",
+				code,
+				language,
+				executionId,
+			});
+		});
+	}
+
 	forceStopExecution() {
 		console.log("强制停止代码执行");
 		this.isExecuting = false;
@@ -347,4 +392,11 @@ export const executeCode = (
 
 export const stopExecution = (): void => {
 	codeExecutionService.forceStopExecution();
+};
+
+export const executeInlineEval = (
+	code: string,
+	language: "javascript" | "typescript",
+): Promise<InlineEvalResult[]> => {
+	return codeExecutionService.executeInlineEval(code, language);
 };
