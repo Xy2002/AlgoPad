@@ -46,6 +46,7 @@ export interface TraceStep {
 	startCol: number;
 	endCol: number;
 	timestamp: number;
+	variables?: Record<string, string>;
 }
 
 export interface RecursiveTrace {
