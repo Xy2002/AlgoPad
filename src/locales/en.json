@@ -181,7 +181,9 @@
 		"maxDepth": "Max Depth",
 		"truncated": "Trace was truncated at {{max}} steps",
 		"noTrace": "No recursive functions detected.",
-		"speed": "Speed"
+		"speed": "Speed",
+		"variables": "Variables",
+		"noVariables": "No variables"
 	},
 	"swcLoading": {
 		"title": "Loading Compiler",

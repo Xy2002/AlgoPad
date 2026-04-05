@@ -238,7 +238,9 @@
 		"maxDepth": "最大深度",
 		"truncated": "追踪在 {{max}} 步时被截断",
 		"noTrace": "未检测到递归函数。",
-		"speed": "速度"
+		"speed": "速度",
+		"variables": "变量状态",
+		"noVariables": "暂无变量"
 	},
 	"swcLoading": {
 		"title": "正在加载编译器",
