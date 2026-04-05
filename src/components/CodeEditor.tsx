@@ -10,7 +10,7 @@ import {
 	type CompletionRegistration,
 	registerCompletion,
 } from "monacopilot";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
@@ -65,15 +65,17 @@ export default function CodeEditor({
 	const completionRegistrationRef = useRef<CompletionRegistration | null>(null);
 	const decorationCollectionRef =
 		useRef<monaco.editor.IEditorDecorationsCollection | null>(null);
-	const inlineEvalDecorationsRef =
-		useRef<monaco.editor.IEditorDecorationsCollection | null>(null);
+	const inlineEvalOverlayRef = useRef<HTMLDivElement | null>(null);
 	const [isEditorReady, setIsEditorReady] = useState(false);
 
 	// Reset refs when component remounts after unmount
 	useEffect(() => {
 		return () => {
 			decorationCollectionRef.current?.clear();
-			inlineEvalDecorationsRef.current?.clear();
+			if (inlineEvalOverlayRef.current) {
+				inlineEvalOverlayRef.current.remove();
+				inlineEvalOverlayRef.current = null;
+			}
 			editorRef.current = null;
 			monacoRef.current = null;
 			setIsEditorReady(false);
@@ -118,8 +120,9 @@ export default function CodeEditor({
 			if (decorationCollectionRef.current) {
 				decorationCollectionRef.current.clear();
 			}
-			if (inlineEvalDecorationsRef.current) {
-				inlineEvalDecorationsRef.current.clear();
+			if (inlineEvalOverlayRef.current) {
+				inlineEvalOverlayRef.current.remove();
+				inlineEvalOverlayRef.current = null;
 			}
 		};
 	}, []);
@@ -176,39 +179,86 @@ export default function CodeEditor({
 		editor.revealLineInCenter(line);
 	}, [highlightRange, isEditorReady]);
 
-	// Inline expression evaluation decorations
-	useEffect(() => {
+	// Inline expression evaluation overlay
+	const renderInlineEvalOverlay = useCallback(() => {
 		const editor = editorRef.current;
 		const monacoInstance = monacoRef.current;
-		if (!editor || !monacoInstance || !isEditorReady) {
-			return;
+		if (!editor || !monacoInstance) return;
+
+		// Create overlay container if needed
+		const container = editor.getDomNode();
+		if (!container) return;
+
+		let overlay = inlineEvalOverlayRef.current;
+		if (!overlay) {
+			overlay = document.createElement("div");
+			overlay.className = "inline-eval-overlay";
+			overlay.style.cssText =
+				"position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;overflow:hidden;z-index:10;";
+			const overflowGuard = container.querySelector(".overflow-guard");
+			if (overflowGuard) {
+				overflowGuard.appendChild(overlay);
+			} else {
+				container.appendChild(overlay);
+			}
+			inlineEvalOverlayRef.current = overlay;
 		}
 
-		if (!inlineEvalDecorationsRef.current) {
-			inlineEvalDecorationsRef.current = editor.createDecorationsCollection([]);
-		}
+		// Clear previous content
+		overlay.innerHTML = "";
 
-		if (!inlineEvalResults || inlineEvalResults.length === 0) {
-			inlineEvalDecorationsRef.current.clear();
-			return;
-		}
+		if (!inlineEvalResults || inlineEvalResults.length === 0) return;
 
-		inlineEvalDecorationsRef.current.set(
-			inlineEvalResults.map((result) => ({
-				range: new monacoInstance.Range(result.line, 1, result.line, 1),
-				options: {
-					isWholeLine: true,
-					after: {
-						content: ` // \u2192 ${result.error || result.value}`,
-						inlineClassName: result.error
-							? "inline-eval-error"
-							: "inline-eval-result",
-						cursorStops: monacoInstance.editor.InjectedTextCursorStops.None,
-					},
-				},
-			})),
+		const model = editor.getModel();
+		if (!model) return;
+
+		const layoutInfo = editor.getLayoutInfo();
+		const lineHeight = editor.getOption(
+			monacoInstance.editor.EditorOption.lineHeight,
 		);
-	}, [inlineEvalResults, isEditorReady]);
+
+		for (const result of inlineEvalResults) {
+			const lineLength = model.getLineLength(result.line);
+
+			// Get pixel position of end of line content
+			const pos = editor.getScrolledVisiblePosition({
+				lineNumber: result.line,
+				column: lineLength + 1,
+			});
+			if (!pos) continue;
+
+			const span = document.createElement("span");
+			const text = ` // \u2192 ${result.error || result.value}`;
+			span.textContent = text;
+			span.className = result.error
+				? "inline-eval-overlay-error"
+				: "inline-eval-overlay-result";
+			span.style.cssText = `position:absolute;white-space:nowrap;line-height:${lineHeight}px;`;
+
+			span.style.left = `${pos.left}px`;
+			span.style.top = `${pos.top}px`;
+
+			// Only show if within visible area
+			if (pos.top >= 0 && pos.top < layoutInfo.height) {
+				overlay.appendChild(span);
+			}
+		}
+	}, [inlineEvalResults]);
+
+	useEffect(() => {
+		const editor = editorRef.current;
+		if (!editor || !isEditorReady) return;
+		renderInlineEvalOverlay();
+
+		const disposables = [
+			editor.onDidScrollChange(() => renderInlineEvalOverlay()),
+			editor.onDidLayoutChange(() => renderInlineEvalOverlay()),
+		];
+
+		return () => {
+			for (const d of disposables) d.dispose();
+		};
+	}, [isEditorReady, renderInlineEvalOverlay]);
 
 	// Dynamic registration logic based on settings
 	useEffect(() => {

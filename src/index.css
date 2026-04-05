@@ -277,21 +277,23 @@
 	}
 }
 
-/* Inline expression evaluation decorations */
-.inline-eval-result {
+/* Inline expression evaluation overlay */
+.inline-eval-overlay-result {
 	color: rgba(255, 255, 255, 0.35);
 	font-style: italic;
-	font-size: 0.9em;
+	font-size: 0.85em;
+	font-family: Monaco, "Courier New", monospace;
 }
-.inline-eval-error {
+.inline-eval-overlay-error {
 	color: rgba(239, 68, 68, 0.5);
 	font-style: italic;
-	font-size: 0.9em;
+	font-size: 0.85em;
+	font-family: Monaco, "Courier New", monospace;
 }
 
-.vs .inline-eval-result {
+.vs .inline-eval-overlay-result {
 	color: rgba(0, 0, 0, 0.3);
 }
-.vs .inline-eval-error {
+.vs .inline-eval-overlay-error {
 	color: rgba(220, 38, 38, 0.45);
 }
