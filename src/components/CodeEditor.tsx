@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/tooltip";
 import { usePlaygroundStore } from "@/store/usePlaygroundStore";
 import { monacoModelService } from "@/services/monacoModelService";
+import type { InlineEvalResult } from "@/services/codeExecutionService";
 
 interface HighlightRange {
 	line: number;
@@ -40,6 +41,7 @@ interface CodeEditorProps {
 	onMarkersChange?: (markers: monaco.editor.IMarker[]) => void;
 	onEditorMounted?: (editor: monaco.editor.IStandaloneCodeEditor) => void;
 	highlightRange?: HighlightRange | null;
+	inlineEvalResults?: InlineEvalResult[];
 }
 
 export default function CodeEditor({
@@ -53,6 +55,7 @@ export default function CodeEditor({
 	onMarkersChange,
 	onEditorMounted,
 	highlightRange,
+	inlineEvalResults,
 }: CodeEditorProps) {
 	const { t } = useTranslation();
 	const { llmSettings, toggleLlmEnabled, files, fileContents } =
@@ -62,11 +65,15 @@ export default function CodeEditor({
 	const completionRegistrationRef = useRef<CompletionRegistration | null>(null);
 	const decorationCollectionRef =
 		useRef<monaco.editor.IEditorDecorationsCollection | null>(null);
+	const inlineEvalDecorationsRef =
+		useRef<monaco.editor.IEditorDecorationsCollection | null>(null);
 	const [isEditorReady, setIsEditorReady] = useState(false);
 
 	// Reset refs when component remounts after unmount
 	useEffect(() => {
 		return () => {
+			decorationCollectionRef.current?.clear();
+			inlineEvalDecorationsRef.current?.clear();
 			editorRef.current = null;
 			monacoRef.current = null;
 			setIsEditorReady(false);
@@ -110,6 +117,9 @@ export default function CodeEditor({
 			}
 			if (decorationCollectionRef.current) {
 				decorationCollectionRef.current.clear();
+			}
+			if (inlineEvalDecorationsRef.current) {
+				inlineEvalDecorationsRef.current.clear();
 			}
 		};
 	}, []);
@@ -165,6 +175,40 @@ export default function CodeEditor({
 
 		editor.revealLineInCenter(line);
 	}, [highlightRange, isEditorReady]);
+
+	// Inline expression evaluation decorations
+	useEffect(() => {
+		const editor = editorRef.current;
+		const monacoInstance = monacoRef.current;
+		if (!editor || !monacoInstance || !isEditorReady) {
+			return;
+		}
+
+		if (!inlineEvalDecorationsRef.current) {
+			inlineEvalDecorationsRef.current = editor.createDecorationsCollection([]);
+		}
+
+		if (!inlineEvalResults || inlineEvalResults.length === 0) {
+			inlineEvalDecorationsRef.current.clear();
+			return;
+		}
+
+		inlineEvalDecorationsRef.current.set(
+			inlineEvalResults.map((result) => ({
+				range: new monacoInstance.Range(result.line, 1, result.line, 1),
+				options: {
+					isWholeLine: true,
+					after: {
+						content: ` // \u2192 ${result.error || result.value}`,
+						inlineClassName: result.error
+							? "inline-eval-error"
+							: "inline-eval-result",
+						cursorStops: monacoInstance.editor.InjectedTextCursorStops.None,
+					},
+				},
+			})),
+		);
+	}, [inlineEvalResults, isEditorReady]);
 
 	// Dynamic registration logic based on settings
 	useEffect(() => {

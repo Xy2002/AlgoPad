@@ -276,3 +276,22 @@
 		left: 3px;
 	}
 }
+
+/* Inline expression evaluation decorations */
+.inline-eval-result {
+	color: rgba(255, 255, 255, 0.35);
+	font-style: italic;
+	font-size: 0.9em;
+}
+.inline-eval-error {
+	color: rgba(239, 68, 68, 0.5);
+	font-style: italic;
+	font-size: 0.9em;
+}
+
+.vs .inline-eval-result {
+	color: rgba(0, 0, 0, 0.3);
+}
+.vs .inline-eval-error {
+	color: rgba(220, 38, 38, 0.45);
+}
