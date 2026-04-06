@@ -1,6 +1,7 @@
-import { FileCode, FileText, Settings, X } from "lucide-react";
+import { X } from "lucide-react";
 import type React from "react";
 import type { OpenTab } from "@/types/multiFile";
+import FileIcon from "./ui/FileIcon";
 
 interface FileTabProps {
 	tab: OpenTab;
@@ -19,22 +20,6 @@ export default function FileTab({
 	onClick,
 	onContextMenu,
 }: FileTabProps) {
-	const getFileIcon = (fileName: string) => {
-		const extension = fileName.split(".").pop()?.toLowerCase();
-
-		switch (extension) {
-			case "js":
-			case "jsx":
-			case "ts":
-			case "tsx":
-				return <FileCode className="w-3.5 h-3.5" />;
-			case "json":
-				return <Settings className="w-3.5 h-3.5" />;
-			default:
-				return <FileText className="w-3.5 h-3.5" />;
-		}
-	};
-
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		if (e.key === "Enter" || e.key === " ") {
 			e.preventDefault();
@@ -71,7 +56,7 @@ export default function FileTab({
 					isActive ? "text-foreground" : "text-muted-foreground"
 				}`}
 			>
-				{getFileIcon(tab.fileName)}
+				<FileIcon fileName={tab.fileName} className="w-3.5 h-3.5" />
 			</div>
 
 			<span className="flex-1 text-xs truncate">{tab.fileName}</span>

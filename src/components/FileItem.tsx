@@ -1,7 +1,7 @@
-import { FileCode, FileText, Settings } from "lucide-react";
 import type React from "react";
 import type { FileInfo } from "@/types/multiFile";
 import InlineRenameInput from "./InlineRenameInput";
+import FileIcon from "./ui/FileIcon";
 
 interface FileItemProps {
 	file: FileInfo;
@@ -26,23 +26,6 @@ export default function FileItem({
 	onCommitRename,
 	onCancelRename,
 }: FileItemProps) {
-	// 根据文件扩展名获取图标
-	const getFileIcon = (fileName: string) => {
-		const extension = fileName.split(".").pop()?.toLowerCase();
-
-		switch (extension) {
-			case "js":
-			case "jsx":
-			case "ts":
-			case "tsx":
-				return <FileCode className="w-4 h-4 text-primary" />;
-			case "json":
-				return <Settings className="w-4 h-4 text-primary" />;
-			default:
-				return <FileText className="w-4 h-4 text-muted-foreground" />;
-		}
-	};
-
 	// 计算缩进
 	const paddingLeft = 12 + level * 16;
 
@@ -53,7 +36,9 @@ export default function FileItem({
 				style={{ paddingLeft: `${paddingLeft}px` }}
 			>
 				{/* 文件图标 */}
-				<div className="flex-shrink-0 mr-2">{getFileIcon(file.name)}</div>
+				<div className="flex-shrink-0 mr-2">
+					<FileIcon fileName={file.name} className="w-4 h-4" />
+				</div>
 
 				{/* 内联重命名输入 */}
 				<InlineRenameInput
@@ -89,7 +74,9 @@ export default function FileItem({
 			onContextMenu={onContextMenu}
 		>
 			{/* 文件图标 */}
-			<div className="flex-shrink-0 mr-2">{getFileIcon(file.name)}</div>
+			<div className="flex-shrink-0 mr-2">
+				<FileIcon fileName={file.name} className="w-4 h-4" />
+			</div>
 
 			{/* 文件名 */}
 			<span className="flex-1 text-sm truncate">{file.name}</span>
