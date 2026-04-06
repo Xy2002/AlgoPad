@@ -324,6 +324,8 @@ export class FileManager {
 		const updatedFile: FileInfo = {
 			...file,
 			name: newName,
+			language: this.inferLanguageFromExtension(newName),
+			path: file.path.replace(/[^/]+$/, newName),
 			updatedAt: Date.now(),
 			isModified: true,
 		};

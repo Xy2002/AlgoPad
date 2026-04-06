@@ -899,13 +899,20 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 
 	// 重命名文件
 	renameFile: async (fileId: string, newName: string) => {
-		const { files } = get();
+		const { files, openTabs } = get();
 
 		try {
 			const updatedFile = await fileManager.renameFile(fileId, newName, files);
 			const updatedFiles = { ...files, [fileId]: updatedFile };
 
-			set({ files: updatedFiles });
+			// 同步更新已打开标签页的文件名和路径
+			const updatedTabs = openTabs.map((tab) =>
+				tab.fileId === fileId
+					? { ...tab, fileName: updatedFile.name, filePath: updatedFile.path }
+					: tab,
+			);
+
+			set({ files: updatedFiles, openTabs: updatedTabs });
 
 			// 保存到存储
 			fileManager.saveFiles(updatedFiles);
@@ -914,7 +921,6 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 			throw error;
 		}
 	},
-
 	// 复制文件
 	duplicateFile: async (fileId: string, newName?: string) => {
 		const { files, fileContents } = get();
