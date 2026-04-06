@@ -247,34 +247,42 @@
 	transition-property: color, background-color, border-color;
 	transition-timing-function: var(--ease-in-out);
 	transition-duration: 150ms;
+}
 
-	/* Trace line highlighting */
-	.trace-highlight-line {
-		background-color: rgba(250, 204, 21, 0.15);
-	}
-	.trace-highlight-line-decoration {
-		background-color: rgba(245, 158, 11, 0.8);
-		border-radius: 50%;
-		margin-left: 3px;
-		width: 4px;
-		height: 4px;
-		left: 3px;
-	}
+/* Trace line highlighting */
+.trace-highlight-line {
+	background-color: rgba(250, 204, 21, 0.12);
+}
 
-	/* Trace inline range highlighting */
-	.trace-highlight-range {
-		background-color: rgba(250, 204, 21, 0.25);
-		border-left: 2px solid rgba(245, 158, 11, 0.8);
-		border-right: 2px solid rgba(245, 158, 11, 0.8);
-	}
-	.trace-highlight-range-decoration {
-		background-color: rgba(245, 158, 11, 0.8);
-		border-radius: 50%;
-		margin-left: 3px;
-		width: 4px;
-		height: 4px;
-		left: 3px;
-	}
+.trace-highlight-line-decoration {
+	width: 6px !important;
+	height: 6px !important;
+	border-radius: 50%;
+	background: radial-gradient(circle, #fbbf24 0%, #f59e0b 100%);
+	box-shadow: 0 0 6px 1px rgba(251, 191, 36, 0.5);
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	margin-left: 8px;
+}
+
+/* Trace inline range highlighting */
+.trace-highlight-range {
+	background-color: rgba(250, 204, 21, 0.18);
+	border-left: 2px solid rgba(245, 158, 11, 0.6);
+	border-right: 2px solid rgba(245, 158, 11, 0.6);
+}
+
+.trace-highlight-range-decoration {
+	width: 6px !important;
+	height: 6px !important;
+	border-radius: 50%;
+	background: radial-gradient(circle, #fbbf24 0%, #f59e0b 100%);
+	box-shadow: 0 0 6px 1px rgba(251, 191, 36, 0.5);
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	margin-left: 8px;
 }
 
 /* Inline expression evaluation overlay */
