@@ -183,7 +183,8 @@
 			"description": "链表节点类，用于构建单链表"
 		},
 		"treeNode": {
-			"description": "树节点类，支持泛型的通用树结构"
+			"description": "树节点类，支持泛型的通用树结构",
+			"binaryDescription": "LeetCode 风格二叉树节点，包含 val、left 和 right 属性"
 		},
 		"arrayToListNode": {
 			"description": "将数组转换为链表"

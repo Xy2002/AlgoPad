@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { usePlaygroundStore } from "@/store/usePlaygroundStore";
 
 interface FunctionDoc {
 	name: string;
@@ -21,6 +22,10 @@ interface Category {
 
 export default function PredefinedFunctions() {
 	const { t } = useTranslation();
+	const { activeFileId, files } = usePlaygroundStore();
+	const currentTreeMode = activeFileId
+		? files[activeFileId]?.treeMode || "general"
+		: "general";
 
 	const categories: Category[] = [
 		{
@@ -35,13 +40,24 @@ export default function PredefinedFunctions() {
 					example: `const node = new ListNode(1);
 node.next = new ListNode(2);`,
 				},
-				{
-					name: "TreeNode",
-					description: t("predefined.treeNode.description"),
-					signature: "class TreeNode<T> { value: T; children: TreeNode<T>[] }",
-					example: `const root = new TreeNode('root');
+				currentTreeMode === "general"
+					? {
+							name: "TreeNode",
+							description: t("predefined.treeNode.description"),
+							signature:
+								"class TreeNode<T> { value: T; children: TreeNode<T>[] }",
+							example: `const root = new TreeNode('root');
 root.addChild(new TreeNode('child'));`,
-				},
+						}
+					: {
+							name: "TreeNode",
+							description: t("predefined.treeNode.binaryDescription"),
+							signature:
+								"class TreeNode { val: number; left: TreeNode | null; right: TreeNode | null }",
+							example: `const root = new TreeNode(1);
+root.left = new TreeNode(2);
+root.right = new TreeNode(3);`,
+						},
 			],
 		},
 		{

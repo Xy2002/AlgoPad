@@ -126,7 +126,8 @@
 			"description": "Linked list node class for building singly linked lists"
 		},
 		"treeNode": {
-			"description": "Generic tree node class supporting any data type"
+			"description": "Generic tree node class supporting any data type",
+			"binaryDescription": "LeetCode-style binary tree node with val, left, and right properties"
 		},
 		"arrayToListNode": {
 			"description": "Convert an array to a linked list"
