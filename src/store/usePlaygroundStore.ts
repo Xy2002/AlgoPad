@@ -104,6 +104,7 @@ interface PlaygroundState extends MultiFileState {
 	renameFile: (fileId: string, newName: string) => Promise<void>;
 	duplicateFile: (fileId: string, newName?: string) => Promise<FileInfo>;
 	updateFileContent: (fileId: string, content: string) => void;
+	setFileTreeMode: (fileId: string, mode: "general" | "binary") => void;
 	saveFile: (fileId: string) => Promise<void>;
 	saveAllFiles: () => Promise<void>;
 	openFile: (fileId: string) => void;
@@ -978,6 +979,18 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 		if (settings.autoSave) {
 			get().saveFile(fileId);
 		}
+	},
+
+	setFileTreeMode: (fileId: string, mode: "general" | "binary") => {
+		const { files } = get();
+		const file = files[fileId];
+		if (!file) return;
+		set({
+			files: {
+				...files,
+				[fileId]: { ...file, treeMode: mode, updatedAt: Date.now() },
+			},
+		});
 	},
 
 	// 保存单个文件

@@ -14,6 +14,7 @@ export interface FileInfo {
 	updatedAt: number;
 	isModified: boolean;
 	folderId?: string | null;
+	treeMode?: "general" | "binary";
 }
 
 // 文件夹信息接口
