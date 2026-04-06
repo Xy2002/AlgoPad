@@ -1,14 +1,18 @@
 import { ChevronDown, ChevronRight, Folder, FolderOpen } from "lucide-react";
 import type React from "react";
 import type { FolderInfo } from "@/types/multiFile";
+import InlineRenameInput from "./InlineRenameInput";
 
 interface FolderItemProps {
 	folder: FolderInfo;
 	isExpanded: boolean;
 	childCount: number;
 	level: number;
+	isRenaming?: boolean;
 	onToggle: () => void;
 	onContextMenu: (e: React.MouseEvent) => void;
+	onCommitRename?: (newName: string) => void;
+	onCancelRename?: () => void;
 }
 
 export default function FolderItem({
@@ -16,15 +20,49 @@ export default function FolderItem({
 	isExpanded,
 	childCount,
 	level,
+	isRenaming,
 	onToggle,
 	onContextMenu,
+	onCommitRename,
+	onCancelRename,
 }: FolderItemProps) {
 	// 计算缩进
 	const paddingLeft = 12 + level * 16;
 
+	if (isRenaming) {
+		return (
+			<div
+				className="flex items-center px-2 py-1 bg-background border border-primary rounded-sm"
+				style={{ paddingLeft: `${paddingLeft}px` }}
+			>
+				{/* 展开/折叠箭头 */}
+				<div className="flex-shrink-0 mr-1">
+					{isExpanded ? (
+						<ChevronDown className="w-4 h-4 text-muted-foreground" />
+					) : (
+						<ChevronRight className="w-4 h-4 text-muted-foreground" />
+					)}
+				</div>
+
+				{/* 文件夹图标 */}
+				<div className="flex-shrink-0 mr-2">
+					<Folder className="w-4 h-4 text-primary" />
+				</div>
+
+				{/* 内联重命名输入 */}
+				<InlineRenameInput
+					value={folder.name}
+					onCommit={onCommitRename ?? (() => {})}
+					onCancel={onCancelRename ?? (() => {})}
+				/>
+			</div>
+		);
+	}
+
 	return (
 		<button
 			type="button"
+			data-folder-id={folder.id}
 			className="flex items-center px-2 py-1 cursor-pointer text-foreground hover:bg-accent transition-colors group w-full text-left"
 			style={{ paddingLeft: `${paddingLeft}px` }}
 			onClick={onToggle}

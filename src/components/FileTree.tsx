@@ -3,12 +3,19 @@ import type { FileInfo, FolderInfo } from "@/types/multiFile";
 import FileItem from "./FileItem";
 import FolderItem from "./FolderItem";
 
+export interface RenamingItem {
+	id: string;
+	type: "file" | "folder";
+	originalName: string;
+}
+
 interface FileTreeProps {
 	files: Record<string, FileInfo>;
 	folders: Record<string, FolderInfo>;
 	expandedFolders: Set<string>;
 	selectedFileId: string | null;
 	searchQuery: string;
+	renamingItem: RenamingItem | null;
 	onFileSelect: (fileId: string) => void;
 	onFolderToggle: (folderId: string) => void;
 	onContextMenu: (
@@ -16,6 +23,9 @@ interface FileTreeProps {
 		itemId: string,
 		itemType: "file" | "folder",
 	) => void;
+	onStartRename?: (id: string, type: "file" | "folder") => void;
+	onCommitRename: (newName: string) => void;
+	onCancelRename: () => void;
 }
 
 export default function FileTree({
@@ -24,9 +34,13 @@ export default function FileTree({
 	expandedFolders,
 	selectedFileId,
 	searchQuery,
+	renamingItem,
 	onFileSelect,
 	onFolderToggle,
 	onContextMenu,
+	onStartRename,
+	onCommitRename,
+	onCancelRename,
 }: FileTreeProps) {
 	// 过滤文件和文件夹
 	const filterItems = <T extends FileInfo | FolderInfo>(
@@ -60,6 +74,8 @@ export default function FileTree({
 			if (filteredFolders[childId]) {
 				const childFolder = filteredFolders[childId];
 				const childCount = getChildCount(childId);
+				const isRenaming =
+					renamingItem?.id === childId && renamingItem.type === "folder";
 
 				childItems.push(
 					<div key={childId}>
@@ -68,8 +84,11 @@ export default function FileTree({
 							isExpanded={expandedFolders.has(childId)}
 							childCount={childCount}
 							level={level + 1}
+							isRenaming={isRenaming}
 							onToggle={() => onFolderToggle(childId)}
 							onContextMenu={(e) => onContextMenu(e, childId, "folder")}
+							onCommitRename={onCommitRename}
+							onCancelRename={onCancelRename}
 						/>
 						{renderFolderContents(childId, level + 1)}
 					</div>,
@@ -81,6 +100,8 @@ export default function FileTree({
 		Object.values(filteredFiles).forEach((file) => {
 			if (file.parentId === folderId) {
 				const isDirty = false; // TODO: 从 store 获取文件修改状态
+				const isRenaming =
+					renamingItem?.id === file.id && renamingItem.type === "file";
 				childItems.push(
 					<FileItem
 						key={file.id}
@@ -88,8 +109,11 @@ export default function FileTree({
 						isSelected={selectedFileId === file.id}
 						isDirty={isDirty}
 						level={level + 1}
+						isRenaming={isRenaming}
 						onClick={() => onFileSelect(file.id)}
 						onContextMenu={(e) => onContextMenu(e, file.id, "file")}
+						onCommitRename={onCommitRename}
+						onCancelRename={onCancelRename}
 					/>,
 				);
 			}
@@ -129,6 +153,8 @@ export default function FileTree({
 		Object.values(filteredFolders).forEach((folder) => {
 			if (!folder.parentId || folder.parentId === "root") {
 				const childCount = getChildCount(folder.id);
+				const isRenaming =
+					renamingItem?.id === folder.id && renamingItem.type === "folder";
 				rootItems.push(
 					<div key={folder.id}>
 						<FolderItem
@@ -136,8 +162,11 @@ export default function FileTree({
 							isExpanded={expandedFolders.has(folder.id)}
 							childCount={childCount}
 							level={0}
+							isRenaming={isRenaming}
 							onToggle={() => onFolderToggle(folder.id)}
 							onContextMenu={(e) => onContextMenu(e, folder.id, "folder")}
+							onCommitRename={onCommitRename}
+							onCancelRename={onCancelRename}
 						/>
 						{renderFolderContents(folder.id, 0)}
 					</div>,
@@ -149,6 +178,8 @@ export default function FileTree({
 		Object.values(filteredFiles).forEach((file) => {
 			if (!file.parentId || file.parentId === "root") {
 				const isDirty = false; // TODO: 从 store 获取文件修改状态
+				const isRenaming =
+					renamingItem?.id === file.id && renamingItem.type === "file";
 				rootItems.push(
 					<FileItem
 						key={file.id}
@@ -156,8 +187,11 @@ export default function FileTree({
 						isSelected={selectedFileId === file.id}
 						isDirty={isDirty}
 						level={0}
+						isRenaming={isRenaming}
 						onClick={() => onFileSelect(file.id)}
 						onContextMenu={(e) => onContextMenu(e, file.id, "file")}
+						onCommitRename={onCommitRename}
+						onCancelRename={onCancelRename}
 					/>,
 				);
 			}

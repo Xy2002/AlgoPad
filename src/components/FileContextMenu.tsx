@@ -20,9 +20,10 @@ export interface FileContextMenuProps {
 	targetType: "file" | "folder" | "empty";
 	onClose: () => void;
 	onAction?: (action: FileAction, targetId: string) => void;
+	onStartRename?: (id: string, type: "file" | "folder") => void;
 }
 
-type DialogType = "newFile" | "newFolder" | "rename" | "duplicate" | null;
+type DialogType = "newFile" | "newFolder" | "duplicate" | null;
 
 interface DialogState {
 	type: DialogType;
@@ -38,12 +39,11 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
 	targetType,
 	onClose,
 	onAction,
+	onStartRename,
 }) => {
 	const {
 		createFile,
 		createFolder,
-		renameFile,
-		renameFolder,
 		deleteFile,
 		deleteFolder,
 		duplicateFile,
@@ -89,21 +89,6 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
 					break;
 				}
 
-				case "rename": {
-					if (targetType === "file") {
-						const file = files[targetId];
-						if (file && value !== file.name) {
-							await renameFile(targetId, value);
-						}
-					} else if (targetType === "folder") {
-						const folder = folders[targetId];
-						if (folder && value !== folder.name) {
-							await renameFolder(targetId, value);
-						}
-					}
-					break;
-				}
-
 				case "duplicate": {
 					if (targetType === "file") {
 						await duplicateFile(targetId, value);
@@ -113,7 +98,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
 			}
 
 			// 调用外部回调
-			if (onAction && dialogState.type !== "rename") {
+			if (onAction && dialogState.type) {
 				onAction(dialogState.type as FileAction, targetId);
 			}
 		} catch (error) {
@@ -150,26 +135,11 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
 				}
 
 				case "rename": {
-					if (targetType === "file") {
-						const file = files[targetId];
-						if (file) {
-							setDialogState({
-								type: "rename",
-								title: "重命名文件",
-								placeholder: "请输入新文件名",
-								defaultValue: file.name,
-							});
-						}
-					} else if (targetType === "folder") {
-						const folder = folders[targetId];
-						if (folder) {
-							setDialogState({
-								type: "rename",
-								title: "重命名文件夹",
-								placeholder: "请输入新文件夹名",
-								defaultValue: folder.name,
-							});
-						}
+					if (
+						onStartRename &&
+						(targetType === "file" || targetType === "folder")
+					) {
+						onStartRename(targetId, targetType);
 					}
 					break;
 				}

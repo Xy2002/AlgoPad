@@ -1240,7 +1240,7 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 	},
 
 	renameFolder: async (folderId: string, newName: string) => {
-		const { folders } = get();
+		const { folders, files, openTabs } = get();
 
 		try {
 			const updatedFolder = await fileManager.renameFolder(
@@ -1250,10 +1250,56 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 			);
 			const updatedFolders = { ...folders, [folderId]: updatedFolder };
 
-			set({ folders: updatedFolders });
+			// Cascade path updates to all child files
+			const oldFolder = folders[folderId];
+			const updatedFiles = { ...files };
+			const updatedTabs = [...openTabs];
 
-			// 保存到存储
+			if (oldFolder) {
+				// Collect this folder and all descendant folder IDs
+				const folderIds = new Set<string>();
+				const collectDescendants = (parentId: string) => {
+					folderIds.add(parentId);
+					Object.values(folders).forEach((f) => {
+						if (f.parentId === parentId) {
+							collectDescendants(f.id);
+						}
+					});
+				};
+				collectDescendants(folderId);
+
+				// Update paths for files in this folder tree
+				Object.entries(files).forEach(([fileId, file]) => {
+					if (folderIds.has(file.parentId ?? "")) {
+						const pathParts = file.path.split("/");
+						const oldName = oldFolder.name;
+						const idx = pathParts.indexOf(oldName);
+						if (idx !== -1) {
+							pathParts[idx] = newName;
+						}
+						updatedFiles[fileId] = { ...file, path: pathParts.join("/") };
+
+						const tabIdx = updatedTabs.findIndex(
+							(tab) => tab.fileId === fileId,
+						);
+						if (tabIdx !== -1) {
+							updatedTabs[tabIdx] = {
+								...updatedTabs[tabIdx],
+								filePath: pathParts.join("/"),
+							};
+						}
+					}
+				});
+			}
+
+			set({
+				folders: updatedFolders,
+				files: updatedFiles,
+				openTabs: updatedTabs,
+			});
+
 			fileManager.saveFolders(updatedFolders);
+			fileManager.saveFiles(updatedFiles);
 		} catch (error) {
 			console.error("Failed to rename folder:", error);
 			throw error;
