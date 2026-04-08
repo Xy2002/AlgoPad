@@ -130,6 +130,28 @@ interface PlaygroundState extends MultiFileState {
 		data: import("@/services/dataExportService").ExportData,
 		options?: import("@/services/dataExportService").ImportOptions,
 	) => Promise<void>;
+
+	// Sync state
+	syncToken: string | null;
+	syncSalt: string | null;
+	syncVersions: {
+		files: Record<string, number>;
+		folders: Record<string, number>;
+		settings: number;
+	};
+	syncStatus: "idle" | "syncing" | "error" | "offline";
+	isFirstSync: boolean;
+
+	// Sync actions
+	setSyncToken: (token: string | null) => void;
+	setSyncSalt: (salt: string | null) => void;
+	setSyncVersions: (versions: {
+		files?: Record<string, number>;
+		folders?: Record<string, number>;
+		settings?: number;
+	}) => void;
+	setSyncStatus: (status: "idle" | "syncing" | "error" | "offline") => void;
+	setIsFirstSync: (value: boolean) => void;
 }
 
 const STORAGE_KEYS = {
@@ -322,6 +344,13 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 	traceIsPlaying: false,
 	tracePlaySpeed: 500,
 
+	// Sync state
+	syncToken: null,
+	syncSalt: null,
+	syncVersions: { files: {}, folders: {}, settings: 0 },
+	syncStatus: "idle",
+	isFirstSync: false,
+
 	// 多文件系统状态
 	files: {},
 	folders: {},
@@ -436,6 +465,20 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 	setTracePlaySpeed: (speed: number) => {
 		set({ tracePlaySpeed: speed });
 	},
+
+	// Sync actions
+	setSyncToken: (token) => set({ syncToken: token }),
+	setSyncSalt: (salt) => set({ syncSalt: salt }),
+	setSyncVersions: (versions) =>
+		set((state) => ({
+			syncVersions: {
+				files: { ...state.syncVersions.files, ...versions.files },
+				folders: { ...state.syncVersions.folders, ...versions.folders },
+				settings: versions.settings ?? state.syncVersions.settings,
+			},
+		})),
+	setSyncStatus: (status) => set({ syncStatus: status }),
+	setIsFirstSync: (value) => set({ isFirstSync: value }),
 
 	resetToDefault: () => {
 		const { language, codeHistory } = get();
@@ -586,6 +629,12 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 				},
 			});
 
+			// Load sync credentials
+			const syncToken = localStorage.getItem("playground_sync_token");
+			const syncSalt = localStorage.getItem("playground_sync_salt");
+			if (syncToken) set({ syncToken });
+			if (syncSalt) set({ syncSalt });
+
 			// 初始化多文件系统
 			get().initializeMultiFileSystem();
 		} catch (error) {
@@ -692,6 +741,19 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 				expandedFolders: Array.from(expandedFolders),
 			};
 			localStorage.setItem(STORAGE_KEYS.UI_STATE, JSON.stringify(uiState));
+
+			// Save sync credentials
+			const { syncToken, syncSalt } = get();
+			if (syncToken) {
+				localStorage.setItem("playground_sync_token", syncToken);
+			} else {
+				localStorage.removeItem("playground_sync_token");
+			}
+			if (syncSalt) {
+				localStorage.setItem("playground_sync_salt", syncSalt);
+			} else {
+				localStorage.removeItem("playground_sync_salt");
+			}
 		} catch (error) {
 			console.error("Failed to save to storage:", error);
 		}
