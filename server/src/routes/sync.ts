@@ -1,21 +1,18 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import type { Env } from "hono";
 import { and, eq, gt } from "drizzle-orm";
 import { getDb } from "../db/client";
 import { files, folders, settings, users } from "../db/schema";
 import { authMiddleware } from "../middleware/auth";
 import { syncPullRoute, syncPushRoute, syncStatusRoute } from "../types/api";
 
-type SyncEnv = Env & { Variables: { userId: string } };
-
-const app = new OpenAPIHono<SyncEnv>();
+const app = new OpenAPIHono();
 
 // All sync routes require auth
 app.use("*", authMiddleware);
 
 // === GET /api/sync/status ===
 app.openapi(syncStatusRoute, async (c) => {
-	const userId = c.get("userId");
+	const userId = c.get("userId" as never) as string;
 	const db = getDb();
 
 	const userFiles = await db
@@ -75,7 +72,7 @@ app.openapi(syncStatusRoute, async (c) => {
 
 // === POST /api/sync/push ===
 app.openapi(syncPushRoute, async (c) => {
-	const userId = c.get("userId");
+	const userId = c.get("userId" as never) as string;
 	const body = c.req.valid("json");
 	const db = getDb();
 
@@ -219,7 +216,7 @@ app.openapi(syncPushRoute, async (c) => {
 
 // === POST /api/sync/pull ===
 app.openapi(syncPullRoute, async (c) => {
-	const userId = c.get("userId");
+	const userId = c.get("userId" as never) as string;
 	const body = c.req.valid("json");
 	const since = new Date(body.since);
 	const db = getDb();
