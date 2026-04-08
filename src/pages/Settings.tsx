@@ -1,7 +1,13 @@
 import {
 	ArrowLeft,
+	Check,
+	Copy,
+	Cloud,
 	Download,
+	Eye,
+	EyeOff,
 	Indent,
+	Loader2,
 	Monitor,
 	Moon,
 	Save,
@@ -15,6 +21,15 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import DataExportImport from "@/components/DataExportImport";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import {
 	CardContent,
 	CardDescription,
@@ -25,6 +40,7 @@ import { MotionCard, PageTransition } from "@/components/ui/motion";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { usePlaygroundStore } from "@/store/usePlaygroundStore";
+import { disconnect, recover } from "@/services/syncService";
 
 const containerVariants = {
 	hidden: { opacity: 0 },
@@ -44,8 +60,15 @@ const itemVariants = {
 
 export default function Settings() {
 	const { settings, updateSettings } = usePlaygroundStore();
+	const { syncToken, syncStatus } = usePlaygroundStore();
 	const { t } = useTranslation();
 	const [dataExportImportOpen, setDataExportImportOpen] = useState(false);
+	const [tokenInput, setTokenInput] = useState("");
+	const [showToken, setShowToken] = useState(false);
+	const [copied, setCopied] = useState(false);
+	const [isConnecting, setIsConnecting] = useState(false);
+	const [connectError, setConnectError] = useState("");
+	const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
 
 	const handleThemeChange = (theme: "vs-dark" | "vs") => {
 		updateSettings({ theme });
@@ -133,6 +156,164 @@ export default function Settings() {
 										</div>
 									</div>
 								</Button>
+							</CardContent>
+						</MotionCard>
+
+						{/* Cloud Sync */}
+						<MotionCard variants={itemVariants} className="overflow-hidden">
+							<CardHeader className="pb-3">
+								<CardTitle className="flex items-center gap-2 text-sm">
+									<Cloud className="w-4 h-4 text-muted-foreground" />
+									<span>{t("settings.cloudSync.title")}</span>
+									{syncToken && (
+										<span className="ml-auto text-[10px] font-medium px-2 py-0.5 rounded-sm bg-green-500/10 text-green-600 dark:text-green-400">
+											{t("settings.cloudSync.connected")}
+										</span>
+									)}
+									{!syncToken && (
+										<span className="ml-auto text-[10px] font-medium px-2 py-0.5 rounded-sm bg-muted text-muted-foreground">
+											{t("settings.cloudSync.notConnected")}
+										</span>
+									)}
+								</CardTitle>
+								<CardDescription className="text-xs">
+									{t("settings.cloudSync.description")}
+								</CardDescription>
+							</CardHeader>
+							<CardContent className="space-y-3">
+								{syncToken ? (
+									<>
+										{/* Status */}
+										{syncStatus !== "idle" && (
+											<div className="flex items-center gap-2 text-xs text-muted-foreground">
+												{syncStatus === "syncing" && (
+													<Loader2 className="w-3 h-3 animate-spin" />
+												)}
+												<span>
+													{t(
+														syncStatus === "syncing"
+															? "settings.cloudSync.statusSyncing"
+															: syncStatus === "error"
+																? "settings.cloudSync.statusError"
+																: "settings.cloudSync.statusIdle",
+													)}
+												</span>
+											</div>
+										)}
+
+										{/* Token display */}
+										<div className="space-y-1.5">
+											<div className="flex items-center gap-2">
+												<code className="flex-1 text-[11px] font-mono bg-muted px-2.5 py-1.5 rounded-sm break-all select-all">
+													{showToken
+														? syncToken
+														: `${syncToken.slice(0, 8)}${"-".repeat(4)}${"-".repeat(4)}${"-".repeat(4)}${syncToken.slice(-4)}`}
+												</code>
+												<Button
+													variant="ghost"
+													size="sm"
+													className="h-7 w-7 p-0 shrink-0"
+													onClick={() => setShowToken(!showToken)}
+													title={
+														showToken
+															? t("settings.cloudSync.hideToken")
+															: t("settings.cloudSync.showToken")
+													}
+												>
+													{showToken ? (
+														<EyeOff className="w-3.5 h-3.5" />
+													) : (
+														<Eye className="w-3.5 h-3.5" />
+													)}
+												</Button>
+												<Button
+													variant="ghost"
+													size="sm"
+													className="h-7 w-7 p-0 shrink-0"
+													onClick={() => {
+														navigator.clipboard.writeText(syncToken);
+														setCopied(true);
+														setTimeout(() => setCopied(false), 2000);
+													}}
+													title={t("settings.cloudSync.copyToken")}
+												>
+													{copied ? (
+														<Check className="w-3.5 h-3.5 text-green-500" />
+													) : (
+														<Copy className="w-3.5 h-3.5" />
+													)}
+												</Button>
+											</div>
+										</div>
+
+										{/* Disconnect */}
+										<Button
+											variant="outline"
+											size="sm"
+											className="w-full text-xs"
+											onClick={() => setShowDisconnectDialog(true)}
+										>
+											{t("settings.cloudSync.disconnect")}
+										</Button>
+									</>
+								) : (
+									<>
+										{/* Token input */}
+										<div className="space-y-1.5">
+											<label
+												htmlFor="sync-token-input"
+												className="text-xs font-medium text-muted-foreground"
+											>
+												{t("settings.cloudSync.tokenLabel")}
+											</label>
+											<Input
+												id="sync-token-input"
+												value={tokenInput}
+												onChange={(e) => {
+													setTokenInput(e.target.value);
+													setConnectError("");
+												}}
+												placeholder={t("settings.cloudSync.tokenPlaceholder")}
+												className="text-xs font-mono h-8"
+											/>
+											{connectError && (
+												<p className="text-[10px] text-red-500">
+													{connectError}
+												</p>
+											)}
+										</div>
+										<Button
+											size="sm"
+											className="w-full text-xs"
+											disabled={!tokenInput.trim() || isConnecting}
+											onClick={async () => {
+												setIsConnecting(true);
+												setConnectError("");
+												try {
+													await recover(tokenInput.trim());
+													setTokenInput("");
+												} catch (err) {
+													setConnectError(
+														err instanceof Error
+															? err.message
+															: "Connection failed",
+													);
+												} finally {
+													setIsConnecting(false);
+												}
+											}}
+										>
+											{isConnecting ? (
+												<>
+													<Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+													{t("settings.cloudSync.statusSyncing")}
+												</>
+											) : (
+												t("settings.cloudSync.connect")
+											)}
+										</Button>
+									</>
+								)}
 							</CardContent>
 						</MotionCard>
 
@@ -342,6 +523,56 @@ export default function Settings() {
 					open={dataExportImportOpen}
 					onOpenChange={setDataExportImportOpen}
 				/>
+
+				{/* Disconnect Dialog */}
+				<Dialog
+					open={showDisconnectDialog}
+					onOpenChange={setShowDisconnectDialog}
+				>
+					<DialogContent className="max-w-sm">
+						<DialogHeader>
+							<DialogTitle className="text-sm">
+								{t("settings.cloudSync.disconnect")}
+							</DialogTitle>
+							<DialogDescription className="text-xs">
+								{t("settings.cloudSync.disconnectDesc")}
+							</DialogDescription>
+						</DialogHeader>
+						<DialogFooter className="flex-col gap-2 sm:flex-col">
+							<Button
+								variant="outline"
+								size="sm"
+								className="w-full text-xs"
+								onClick={() => {
+									disconnect();
+									setShowDisconnectDialog(false);
+								}}
+							>
+								{t("settings.cloudSync.disconnectKeepData")}
+							</Button>
+							<Button
+								variant="destructive"
+								size="sm"
+								className="w-full text-xs"
+								onClick={() => {
+									disconnect();
+									usePlaygroundStore.getState().clearAllState();
+									setShowDisconnectDialog(false);
+								}}
+							>
+								{t("settings.cloudSync.disconnectClearData")}
+							</Button>
+							<Button
+								variant="ghost"
+								size="sm"
+								className="w-full text-xs"
+								onClick={() => setShowDisconnectDialog(false)}
+							>
+								{t("common.cancel")}
+							</Button>
+						</DialogFooter>
+					</DialogContent>
+				</Dialog>
 			</div>
 		</PageTransition>
 	);

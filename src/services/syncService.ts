@@ -276,6 +276,55 @@ export async function push(store: StoreState): Promise<void> {
 	}
 }
 
+// === Recover (enter existing token on new device) ===
+
+export async function recover(token: string): Promise<void> {
+	const store = usePlaygroundStore.getState();
+
+	store.setSyncStatus("syncing");
+
+	try {
+		// Fetch salt from server using the token
+		const data = await apiFetch<{ salt: string }>(
+			"/recover",
+			{ method: "GET" },
+			token,
+		);
+
+		// Save credentials
+		store.setSyncToken(token);
+		store.setSyncSalt(data.salt);
+		localStorage.setItem("playground_sync_token", token);
+		localStorage.setItem("playground_sync_salt", data.salt);
+
+		// Derive encryption key
+		cryptoKey = await deriveKey(token, data.salt);
+
+		// Pull remote data
+		await pull(usePlaygroundStore.getState());
+
+		// Push local data
+		await push(usePlaygroundStore.getState());
+	} catch (err) {
+		store.setSyncStatus("error");
+		throw err;
+	}
+}
+
+// === Disconnect ===
+
+export function disconnect(): void {
+	const store = usePlaygroundStore.getState();
+	store.setSyncToken(null);
+	store.setSyncSalt(null);
+	store.setSyncStatus("idle");
+	store.setIsFirstSync(false);
+	store.setSyncVersions({ files: {}, folders: {}, settings: 0 });
+	localStorage.removeItem("playground_sync_token");
+	localStorage.removeItem("playground_sync_salt");
+	cryptoKey = null;
+}
+
 // === Initialize ===
 
 export async function initSync(): Promise<void> {

@@ -3,6 +3,7 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { serve } from "@hono/node-server";
+import recoverRoutes from "./routes/recover";
 import registerRoutes from "./routes/register";
 import syncRoutes from "./routes/sync";
 
@@ -24,6 +25,7 @@ app.get("/api/health", (c) => c.json({ status: "ok" }));
 
 // Routes
 app.route("/", registerRoutes);
+app.route("/", recoverRoutes);
 app.route("/", syncRoutes);
 
 // OpenAPI spec

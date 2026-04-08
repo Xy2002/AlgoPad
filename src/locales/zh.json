@@ -99,6 +99,27 @@
 			"enable": "启用自动保存",
 			"enableDesc": "更改将自动保存"
 		},
+		"cloudSync": {
+			"title": "云端同步",
+			"description": "通过端到端加密在设备间同步您的数据",
+			"connected": "已连接",
+			"notConnected": "未连接",
+			"tokenLabel": "同步令牌",
+			"tokenPlaceholder": "输入已有的同步令牌",
+			"connect": "连接",
+			"disconnect": "断开连接",
+			"disconnectDesc": "断开云端同步后，您可以选择保留或清除本地数据。",
+			"disconnectKeepData": "断开连接并保留数据",
+			"disconnectClearData": "断开连接并清除所有数据",
+			"copyToken": "复制令牌",
+			"copied": "已复制",
+			"statusSyncing": "同步中...",
+			"statusError": "同步出错",
+			"statusIdle": "同步完成",
+			"statusOffline": "离线",
+			"showToken": "显示令牌",
+			"hideToken": "隐藏令牌"
+		},
 		"dataExport": {
 			"title": "数据导出 / 导入",
 			"description": "跨设备同步您的 AlgoPad 数据或备份您的工作",

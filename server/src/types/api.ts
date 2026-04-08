@@ -149,6 +149,31 @@ export const PullResponseSchema = z.object({
 	settings: PulledSettingsSchema.nullable(),
 });
 
+// === Recover ===
+
+export const RecoverResponseSchema = z.object({
+	salt: z.string().openapi({ example: "base64-encoded-salt" }),
+});
+
+export const recoverRoute = createRoute({
+	method: "get",
+	path: "/api/recover",
+	responses: {
+		200: {
+			content: {
+				"application/json": { schema: RecoverResponseSchema },
+			},
+			description: "Recovery info retrieved",
+		},
+		401: {
+			content: { "application/json": { schema: ErrorResponseSchema } },
+			description: "Invalid token",
+		},
+	},
+});
+
+// === Sync Pull ===
+
 export const syncPullRoute = createRoute({
 	method: "post",
 	path: "/api/sync/pull",

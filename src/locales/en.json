@@ -88,6 +88,27 @@
 			"description": "Automatically save your work as you type",
 			"enable": "Enable Auto Save",
 			"enableDesc": "Changes will be saved automatically"
+		},
+		"cloudSync": {
+			"title": "Cloud Sync",
+			"description": "Sync your data across devices with end-to-end encryption",
+			"connected": "Connected",
+			"notConnected": "Not Connected",
+			"tokenLabel": "Sync Token",
+			"tokenPlaceholder": "Enter an existing sync token",
+			"connect": "Connect",
+			"disconnect": "Disconnect",
+			"disconnectDesc": "After disconnecting from cloud sync, you can choose to keep or clear your local data.",
+			"disconnectKeepData": "Disconnect & Keep Data",
+			"disconnectClearData": "Disconnect & Clear All Data",
+			"copyToken": "Copy Token",
+			"copied": "Copied",
+			"statusSyncing": "Syncing...",
+			"statusError": "Sync Error",
+			"statusIdle": "Synced",
+			"statusOffline": "Offline",
+			"showToken": "Show Token",
+			"hideToken": "Hide Token"
 		}
 	},
 	"dialogs": {
