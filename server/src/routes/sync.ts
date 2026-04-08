@@ -1,5 +1,6 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { and, eq, gt } from "drizzle-orm";
+import { isNull, notInArray } from "drizzle-orm/sql/expressions/conditions";
 import { getDb } from "../db/client";
 import { files, folders, settings, users } from "../db/schema";
 import { authMiddleware } from "../middleware/auth";
@@ -129,6 +130,26 @@ app.openapi(syncPushRoute, async (c) => {
 		}
 	}
 
+	// Mark files not in push payload as deleted
+	const pushedFileIds = body.files?.map((f) => f.id) ?? [];
+	if (pushedFileIds.length > 0) {
+		await db
+			.update(files)
+			.set({ deletedAt: new Date(), updatedAt: new Date() })
+			.where(
+				and(
+					eq(files.userId, userId),
+					notInArray(files.id, pushedFileIds),
+					isNull(files.deletedAt),
+				),
+			);
+	} else if (body.files) {
+		await db
+			.update(files)
+			.set({ deletedAt: new Date(), updatedAt: new Date() })
+			.where(and(eq(files.userId, userId), isNull(files.deletedAt)));
+	}
+
 	// Push folders (same logic as files)
 	if (body.folders && body.folders.length > 0) {
 		results.folders = {};
@@ -168,6 +189,26 @@ app.openapi(syncPushRoute, async (c) => {
 				};
 			}
 		}
+	}
+
+	// Mark folders not in push payload as deleted
+	const pushedFolderIds = body.folders?.map((f) => f.id) ?? [];
+	if (pushedFolderIds.length > 0) {
+		await db
+			.update(folders)
+			.set({ deletedAt: new Date(), updatedAt: new Date() })
+			.where(
+				and(
+					eq(folders.userId, userId),
+					notInArray(folders.id, pushedFolderIds),
+					isNull(folders.deletedAt),
+				),
+			);
+	} else if (body.folders) {
+		await db
+			.update(folders)
+			.set({ deletedAt: new Date(), updatedAt: new Date() })
+			.where(and(eq(folders.userId, userId), isNull(folders.deletedAt)));
 	}
 
 	// Push settings

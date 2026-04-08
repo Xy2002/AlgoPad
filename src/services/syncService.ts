@@ -197,9 +197,7 @@ export async function push(store: StoreState): Promise<void> {
 				version: syncVersions.files[id] ?? 0,
 			});
 		}
-		if (filesPayload.length > 0) {
-			body.files = filesPayload;
-		}
+		body.files = filesPayload;
 
 		// Encrypt folders
 		const foldersPayload = [];
@@ -212,9 +210,7 @@ export async function push(store: StoreState): Promise<void> {
 				version: syncVersions.folders[id] ?? 0,
 			});
 		}
-		if (foldersPayload.length > 0) {
-			body.folders = foldersPayload;
-		}
+		body.folders = foldersPayload;
 
 		// Encrypt settings
 		const settingsPlaintext = JSON.stringify({
