@@ -8,7 +8,7 @@ import { syncPullRoute, syncPushRoute, syncStatusRoute } from "../types/api";
 const app = new OpenAPIHono();
 
 // All sync routes require auth
-app.use("*", authMiddleware);
+app.use("/api/*", authMiddleware);
 
 // === GET /api/sync/status ===
 app.openapi(syncStatusRoute, async (c) => {

@@ -56,10 +56,10 @@ app.get("/api/docs", (c) => {
 });
 
 // Serve frontend static files (production only)
-app.use("/*", serveStatic({ root: "./dist" }));
+app.use("/*", serveStatic({ root: "../dist" }));
 
 // SPA fallback: serve index.html for all non-API routes
-app.get("*", serveStatic({ root: "./dist", path: "index.html" }));
+app.get("*", serveStatic({ root: "../dist", path: "index.html" }));
 
 const port = Number(process.env.PORT) || 3000;
 console.log(`Server running on http://localhost:${port}`);

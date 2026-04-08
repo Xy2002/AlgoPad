@@ -7,7 +7,7 @@ import { recoverRoute } from "../types/api";
 
 const app = new OpenAPIHono();
 
-app.use("*", authMiddleware);
+app.use("/api/*", authMiddleware);
 
 // === GET /api/recover ===
 app.openapi(recoverRoute, async (c) => {
