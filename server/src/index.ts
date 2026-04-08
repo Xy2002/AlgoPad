@@ -3,6 +3,7 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { serve } from "@hono/node-server";
+import { serveStatic } from "@hono/node-server/serve-static";
 import recoverRoutes from "./routes/recover";
 import registerRoutes from "./routes/register";
 import syncRoutes from "./routes/sync";
@@ -53,6 +54,12 @@ app.get("/api/docs", (c) => {
 </html>`;
 	return c.html(html);
 });
+
+// Serve frontend static files (production only)
+app.use("/*", serveStatic({ root: "./dist" }));
+
+// SPA fallback: serve index.html for all non-API routes
+app.get("*", serveStatic({ root: "./dist", path: "index.html" }));
 
 const port = Number(process.env.PORT) || 3000;
 console.log(`Server running on http://localhost:${port}`);
