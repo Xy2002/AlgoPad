@@ -22,5 +22,5 @@ RUN pnpm build
 # Expose port (Railway sets PORT env var)
 EXPOSE 3000
 
-# Start server
-CMD ["pnpm", "--filter", "algopad-server", "start"]
+# Push database schema then start server
+CMD ["sh", "-c", "pnpm db:push && pnpm --filter algopad-server start"]
