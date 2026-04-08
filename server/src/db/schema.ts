@@ -19,7 +19,7 @@ export const users = pgTable("users", {
 export const files = pgTable(
 	"files",
 	{
-		id: uuid("id").primaryKey(),
+		id: text("id").primaryKey(),
 		userId: uuid("user_id")
 			.notNull()
 			.references(() => users.id, { onDelete: "cascade" }),
@@ -36,7 +36,7 @@ export const files = pgTable(
 export const folders = pgTable(
 	"folders",
 	{
-		id: uuid("id").primaryKey(),
+		id: text("id").primaryKey(),
 		userId: uuid("user_id")
 			.notNull()
 			.references(() => users.id, { onDelete: "cascade" }),

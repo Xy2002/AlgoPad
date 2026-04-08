@@ -57,14 +57,14 @@ export const syncStatusRoute = createRoute({
 // === Sync Push ===
 
 export const PushFileSchema = z.object({
-	id: z.uuid(),
+	id: z.string(),
 	encryptedData: z.string(),
 	version: z.number().int(),
 	deletedAt: z.string().nullable().optional(),
 });
 
 export const PushFolderSchema = z.object({
-	id: z.uuid(),
+	id: z.string(),
 	encryptedData: z.string(),
 	version: z.number().int(),
 	deletedAt: z.string().nullable().optional(),
@@ -122,7 +122,7 @@ export const PullRequestSchema = z.object({
 });
 
 export const PulledFileSchema = z.object({
-	id: z.uuid(),
+	id: z.string(),
 	encryptedData: z.string(),
 	version: z.number().int(),
 	updatedAt: z.string(),
@@ -130,7 +130,7 @@ export const PulledFileSchema = z.object({
 });
 
 export const PulledFolderSchema = z.object({
-	id: z.uuid(),
+	id: z.string(),
 	encryptedData: z.string(),
 	version: z.number().int(),
 	updatedAt: z.string(),
