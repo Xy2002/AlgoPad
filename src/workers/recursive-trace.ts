@@ -39,7 +39,7 @@ export function detectRecursiveFunctions(code: string): RecursiveFuncInfo[] {
 
 		const body = code.substring(bodyStart, bodyEnd);
 		// Check if the function calls itself inside its body
-		const callRegex = new RegExp(`\\b${funcName}\\s*\\(`, "g");
+		const callRegex = new RegExp(`(?<!\\.)\\b${funcName}\\s*\\(`, "g");
 		const calls = body.match(callRegex);
 
 		if (calls && calls.length > 0) {
@@ -120,7 +120,7 @@ export function instrumentRecursiveFunctions(
 	// Pre-compute call-site line/col info (against the editor-visible source)
 	const precomputedCalls: Record<string, PrecomputedCall[]> = {};
 	for (const func of recursiveFuncs) {
-		const callRegex = new RegExp(`\\b${func.name}\\s*\\(`, "g");
+		const callRegex = new RegExp(`(?<!\\.)\\b${func.name}\\s*\\(`, "g");
 		const calls: PrecomputedCall[] = [];
 		let match: RegExpExecArray | null;
 		// biome-ignore lint/suspicious/noAssignInExpressions: regex exec loop pattern
@@ -200,7 +200,7 @@ export function instrumentRecursiveFunctions(
 		const precomputed = precomputedCalls[originalName];
 
 		// Find all originalName( call sites in the current result
-		const callRegex = new RegExp(`\\b${originalName}\\s*\\(`, "g");
+		const callRegex = new RegExp(`(?<!\\.)\\b${originalName}\\s*\\(`, "g");
 		const callSites: {
 			nameStart: number;
 			parenStart: number;
