@@ -2,10 +2,11 @@ import { decrypt, deriveKey, encrypt } from "./cryptoService";
 import { usePlaygroundStore } from "@/store/usePlaygroundStore";
 
 const API_BASE = "/api";
-const SYNC_DEBOUNCE_MS = 3000;
+const SYNC_DEBOUNCE_MS = 10000;
 
 let cryptoKey: CryptoKey | null = null;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+let lastPushedSnapshot = "";
 
 type StoreState = ReturnType<typeof usePlaygroundStore.getState>;
 
@@ -378,14 +379,38 @@ export async function initSync(): Promise<void> {
 }
 
 // Called from store subscription for auto-sync
+function getSyncSnapshot(store: StoreState): string {
+	const fileStamps = Object.keys(store.files)
+		.sort()
+		.map((id) => `${id}:${store.files[id]?.updatedAt ?? 0}`);
+	const folderStamps = Object.keys(store.folders)
+		.sort()
+		.map(
+			(id) =>
+				`${id}:${store.folders[id]?.createdAt ?? 0}:${store.folders[id]?.children.join(".")}`,
+		);
+	return `${fileStamps.join(",")}|${folderStamps.join(",")}|${JSON.stringify(store.settings)}|${JSON.stringify(store.llmSettings)}`;
+}
+
 export function onStoreChange(): void {
 	const store = usePlaygroundStore.getState();
 	if (!store.syncToken || store.syncStatus === "syncing") return;
 
+	const snapshot = getSyncSnapshot(store);
+	if (snapshot === lastPushedSnapshot) return;
+
 	if (debounceTimer) clearTimeout(debounceTimer);
 	debounceTimer = setTimeout(() => {
-		push(usePlaygroundStore.getState()).catch((err) => {
-			console.error("Auto-push failed:", err);
-		});
+		const currentStore = usePlaygroundStore.getState();
+		const currentSnapshot = getSyncSnapshot(currentStore);
+		if (currentSnapshot === lastPushedSnapshot) return;
+
+		push(currentStore)
+			.then(() => {
+				lastPushedSnapshot = currentSnapshot;
+			})
+			.catch((err) => {
+				console.error("Auto-push failed:", err);
+			});
 	}, SYNC_DEBOUNCE_MS);
 }
