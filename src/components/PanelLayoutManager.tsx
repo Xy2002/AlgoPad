@@ -15,7 +15,6 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { FloatingPanelState } from "@/store/usePlaygroundStore";
 import { FloatingPanel } from "./FloatingPanel";
@@ -92,7 +91,7 @@ export default function PanelLayoutManager({
 	onBringFloatingPanelToFront,
 	onResetPanelLayout,
 }: PanelLayoutManagerProps) {
-	const [draggedTabId, setDraggedTabId] = useState<string | null>(null);
+	const [_draggedTabId, setDraggedTabId] = useState<string | null>(null);
 	const dragStartPos = useRef<{ x: number; y: number } | null>(null);
 	const tabBarRef = useRef<HTMLDivElement>(null);
 
