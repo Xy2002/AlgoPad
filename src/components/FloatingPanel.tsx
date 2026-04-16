@@ -1,125 +1,122 @@
-import { Minus, X } from "lucide-react";
-import { type ReactNode, useCallback, useRef, useState } from "react";
+import { X } from "lucide-react";
+import { type ReactNode, useCallback } from "react";
+import { Rnd } from "react-rnd";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader } from "./ui/card";
 
 interface FloatingPanelProps {
+	tabId?: string;
 	title: string;
 	children: ReactNode;
-	isOpen: boolean;
+	x?: number;
+	y?: number;
+	width: number;
+	height: number;
+	zIndex?: number;
 	onClose: () => void;
+	onDragStop?: (tabId: string, x: number, y: number) => void;
+	onResizeStop?: (tabId: string, width: number, height: number) => void;
+	onFocus?: () => void;
+	onTitleBarDrag?: (tabId: string, x: number, y: number) => void;
+	// Legacy props for backward compatibility (Task 5 will remove these)
+	isOpen?: boolean;
 	defaultPosition?: { x: number; y: number };
-	width?: number;
-	height?: number;
 }
 
 export function FloatingPanel({
+	tabId = "",
 	title,
 	children,
-	isOpen,
+	x: xProp,
+	y: yProp,
+	width,
+	height,
+	zIndex = 50,
 	onClose,
-	defaultPosition = { x: 100, y: 100 },
-	width = 400,
-	height = 500,
+	onDragStop,
+	onResizeStop,
+	onFocus,
+	onTitleBarDrag,
+	// Legacy props
+	isOpen = true,
+	defaultPosition,
 }: FloatingPanelProps) {
-	const [position, setPosition] = useState(defaultPosition);
-	const [isMinimized, setIsMinimized] = useState(false);
-	const [isDragging, setIsDragging] = useState(false);
-	const dragOffset = useRef({ x: 0, y: 0 });
-	const panelRef = useRef<HTMLDivElement>(null);
+	// Support legacy defaultPosition prop
+	const x = xProp ?? defaultPosition?.x ?? 100;
+	const y = yProp ?? defaultPosition?.y ?? 100;
 
-	const handleMouseDown = useCallback(
-		(e: React.MouseEvent<HTMLDivElement>) => {
-			// Only start dragging if clicking on the header (not buttons)
-			if ((e.target as HTMLElement).closest("button")) return;
-
-			setIsDragging(true);
-			dragOffset.current = {
-				x: e.clientX - position.x,
-				y: e.clientY - position.y,
-			};
-
-			const handleMouseMove = (moveEvent: MouseEvent) => {
-				const newX = moveEvent.clientX - dragOffset.current.x;
-				const newY = moveEvent.clientY - dragOffset.current.y;
-
-				// Keep panel within viewport bounds
-				const maxX = window.innerWidth - width;
-				const maxY = window.innerHeight - (isMinimized ? 48 : height);
-
-				setPosition({
-					x: Math.max(0, Math.min(newX, maxX)),
-					y: Math.max(0, Math.min(newY, maxY)),
-				});
-			};
-
-			const handleMouseUp = () => {
-				setIsDragging(false);
-				document.removeEventListener("mousemove", handleMouseMove);
-				document.removeEventListener("mouseup", handleMouseUp);
-			};
-
-			document.addEventListener("mousemove", handleMouseMove);
-			document.addEventListener("mouseup", handleMouseUp);
+	const handleDragStop = useCallback(
+		(_e: unknown, d: { x: number; y: number }) => {
+			onDragStop?.(tabId, d.x, d.y);
 		},
-		[position, width, height, isMinimized],
+		[tabId, onDragStop],
 	);
 
-	const toggleMinimize = () => {
-		setIsMinimized(!isMinimized);
-	};
+	const handleResizeStop = useCallback(
+		(
+			_e: unknown,
+			_dir: unknown,
+			ref: HTMLElement,
+			_delta: unknown,
+			position: { x: number; y: number },
+		) => {
+			onResizeStop?.(
+				tabId,
+				parseInt(ref.style.width, 10),
+				parseInt(ref.style.height, 10),
+			);
+			onDragStop?.(tabId, position.x, position.y);
+		},
+		[tabId, onResizeStop, onDragStop],
+	);
+
+	const handleDrag = useCallback(
+		(_e: unknown, d: { x: number; y: number }) => {
+			onTitleBarDrag?.(tabId, d.x, d.y);
+		},
+		[tabId, onTitleBarDrag],
+	);
 
 	if (!isOpen) return null;
 
 	return (
-		<div
-			ref={panelRef}
-			className="fixed z-50"
-			style={{
-				left: position.x,
-				top: position.y,
-				width: width,
+		<Rnd
+			style={{ zIndex }}
+			default={{ x, y, width, height }}
+			minWidth={300}
+			minHeight={200}
+			bounds="parent"
+			dragHandleClassName="floating-panel-titlebar"
+			onDragStop={handleDragStop}
+			onDrag={handleDrag}
+			onResizeStop={handleResizeStop}
+			onMouseDown={onFocus}
+			enableResizing={{
+				bottom: true,
+				bottomRight: true,
+				bottomLeft: true,
+				left: true,
+				right: true,
+				top: false,
+				topLeft: false,
+				topRight: false,
 			}}
 		>
-			<Card className="overflow-hidden border-border bg-background shadow-lg dark:shadow-lg dark:shadow-black/20">
-				{/* Header - Draggable area */}
-				<CardHeader
-					className={`flex flex-row items-center justify-between p-2.5 cursor-move select-none border-b border-border ${
-						isDragging ? "cursor-grabbing" : ""
-					}`}
-					onMouseDown={handleMouseDown}
-				>
-					<span className="text-xs font-medium truncate text-muted-foreground">
+			<div className="h-full flex flex-col bg-background border border-border rounded-md shadow-lg overflow-hidden">
+				<div className="floating-panel-titlebar flex items-center justify-between px-2.5 py-1.5 border-b border-border bg-muted/50 cursor-move select-none">
+					<span className="text-xs font-medium text-muted-foreground truncate">
 						{title}
 					</span>
-					<div className="flex items-center gap-0.5">
-						<Button
-							variant="ghost"
-							size="sm"
-							onClick={toggleMinimize}
-							className="h-5 w-5 p-0"
-						>
-							<Minus className="h-2.5 w-2.5" />
-						</Button>
-						<Button
-							variant="ghost"
-							size="sm"
-							onClick={onClose}
-							className="h-5 w-5 p-0 hover:text-destructive"
-						>
-							<X className="h-2.5 w-2.5" />
-						</Button>
-					</div>
-				</CardHeader>
-
-				{/* Content */}
-				<CardContent
-					className={`p-0 overflow-auto ${isMinimized ? "hidden" : ""}`}
-					style={{ height: height - 40 }}
-				>
-					{children}
-				</CardContent>
-			</Card>
-		</div>
+					<Button
+						variant="ghost"
+						size="sm"
+						onClick={onClose}
+						className="h-5 w-5 p-0 hover:text-destructive"
+					>
+						<X className="h-3 w-3" />
+					</Button>
+				</div>
+				<div className="flex-1 min-h-0 overflow-hidden">{children}</div>
+			</div>
+		</Rnd>
 	);
 }
