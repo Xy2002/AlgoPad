@@ -1,309 +1,310 @@
-# Design System Inspired by Cursor
+# Design System Inspired by Vercel
 
 ## 1. Visual Theme & Atmosphere
 
-Cursor's website is a study in warm minimalism meets code-editor elegance. The entire experience is built on a warm off-white canvas (`#f2f1ed`) with dark warm-brown text (`#26251e`) -- not pure black, not neutral gray, but a deeply warm near-black with a yellowish undertone that evokes old paper, ink, and craft. This warmth permeates every surface: backgrounds lean toward cream (`#e6e5e0`, `#ebeae5`), borders dissolve into transparent warm overlays using `oklab` color space, and even the error state (`#cf2d56`) carries warmth rather than clinical red. The result feels more like a premium print publication than a tech website.
+Vercel's website is the visual thesis of developer infrastructure made invisible — a design system so restrained it borders on philosophical. The page is overwhelmingly white (`#ffffff`) with near-black (`#171717`) text, creating a gallery-like emptiness where every element earns its pixel. This isn't minimalism as decoration; it's minimalism as engineering principle. The Geist design system treats the interface like a compiler treats code — every unnecessary token is stripped away until only structure remains.
 
-The custom CursorGothic font is the typographic signature -- a gothic sans-serif with aggressive negative letter-spacing at display sizes (-2.16px at 72px) that creates a compressed, engineered feel. As a secondary voice, the jjannon serif font (with OpenType `"cswh"` contextual swash alternates) provides literary counterpoint for body copy and editorial passages. The monospace voice comes from berkeleyMono, a refined coding font that connects the marketing site to Cursor's core identity as a code editor. This three-font system (gothic display, serif body, mono code) gives Cursor one of the most typographically rich palettes in developer tooling.
+The custom Geist font family is the crown jewel. Geist Sans uses aggressive negative letter-spacing (-2.4px to -2.88px at display sizes), creating headlines that feel compressed, urgent, and engineered — like code that's been minified for production. At body sizes, the tracking relaxes but the geometric precision persists. Geist Mono completes the system as the monospace companion for code, terminal output, and technical labels. Both fonts enable OpenType `"liga"` (ligatures) globally, adding a layer of typographic sophistication that rewards close reading.
 
-The border system is particularly distinctive -- Cursor uses `oklab()` color space for border colors, applying warm brown at various alpha levels (0.1, 0.2, 0.55) to create borders that feel organic rather than mechanical. The signature border color `oklab(0.263084 -0.00230259 0.0124794 / 0.1)` is not a simple rgba value but a perceptually uniform color that maintains visual consistency across different backgrounds.
+What distinguishes Vercel from other monochrome design systems is its shadow-as-border philosophy. Instead of traditional CSS borders, Vercel uses `box-shadow: 0px 0px 0px 1px rgba(0,0,0,0.08)` — a zero-offset, zero-blur, 1px-spread shadow that creates a border-like line without the box model implications. This technique allows borders to exist in the shadow layer, enabling smoother transitions, rounded corners without clipping, and a subtler visual weight than traditional borders. The entire depth system is built on layered, multi-value shadow stacks where each layer serves a specific purpose: one for the border, one for soft elevation, one for ambient depth.
 
 **Key Characteristics:**
-- CursorGothic with aggressive negative letter-spacing (-2.16px at 72px, -0.72px at 36px) for compressed display headings
-- jjannon serif for body text with OpenType `"cswh"` (contextual swash alternates)
-- berkeleyMono for code and technical labels
-- Warm off-white background (`#f2f1ed`) instead of pure white -- the entire system is warm-shifted
-- Primary text color `#26251e` (warm near-black with yellow undertone)
-- Accent orange `#f54e00` for brand highlight and links
-- oklab-space borders at various alpha levels for perceptually uniform edge treatment
-- Pill-shaped elements with extreme radius (33.5M px, effectively full-pill)
-- 8px base spacing system with fine-grained sub-8px increments (1.5px, 2px, 2.5px, 3px, 4px, 5px, 6px)
+- Geist Sans with extreme negative letter-spacing (-2.4px to -2.88px at display) — text as compressed infrastructure
+- Geist Mono for code and technical labels with OpenType `"liga"` globally
+- Shadow-as-border technique: `box-shadow 0px 0px 0px 1px` replaces traditional borders throughout
+- Multi-layer shadow stacks for nuanced depth (border + elevation + ambient in single declarations)
+- Near-pure white canvas with `#171717` text — not quite black, creating micro-contrast softness
+- Workflow-specific accent colors: Ship Red (`#ff5b4f`), Preview Pink (`#de1d8d`), Develop Blue (`#0a72ef`)
+- Focus ring system using `hsla(212, 100%, 48%, 1)` — a saturated blue for accessibility
+- Pill badges (9999px) with tinted backgrounds for status indicators
 
 ## 2. Color Palette & Roles
 
 ### Primary
-- **Cursor Dark** (`#26251e`): Primary text, headings, dark UI surfaces. A warm near-black with distinct yellow-brown undertone -- the defining color of the system.
-- **Cursor Cream** (`#f2f1ed`): Page background, primary surface. Not white but a warm cream that sets the entire warm tone.
-- **Cursor Light** (`#e6e5e0`): Secondary surface, button backgrounds, card fills. A slightly warmer, slightly darker cream.
-- **Pure White** (`#ffffff`): Used sparingly for maximum contrast elements and specific surface highlights.
-- **True Black** (`#000000`): Minimal use, specific code/console contexts.
+- **Vercel Black** (`#171717`): Primary text, headings, dark surface backgrounds. Not pure black — the slight warmth prevents harshness.
+- **Pure White** (`#ffffff`): Page background, card surfaces, button text on dark.
+- **True Black** (`#000000`): Secondary use, `--geist-console-text-color-default`, used in specific console/code contexts.
 
-### Accent
-- **Cursor Orange** (`#f54e00`): Brand accent, `--color-accent`. A vibrant red-orange used for primary CTAs, active links, and brand moments. Warm and urgent.
-- **Gold** (`#c08532`): Secondary accent, warm gold for premium or highlighted contexts.
+### Workflow Accent Colors
+- **Ship Red** (`#ff5b4f`): `--ship-text`, the "ship to production" workflow step — warm, urgent coral-red.
+- **Preview Pink** (`#de1d8d`): `--preview-text`, the preview deployment workflow — vivid magenta-pink.
+- **Develop Blue** (`#0a72ef`): `--develop-text`, the development workflow — bright, focused blue.
 
-### Semantic
-- **Error** (`#cf2d56`): `--color-error`. A warm crimson-rose rather than cold red.
-- **Success** (`#1f8a65`): `--color-success`. A muted teal-green, warm-shifted.
+### Console / Code Colors
+- **Console Blue** (`#0070f3`): `--geist-console-text-color-blue`, syntax highlighting blue.
+- **Console Purple** (`#7928ca`): `--geist-console-text-color-purple`, syntax highlighting purple.
+- **Console Pink** (`#eb367f`): `--geist-console-text-color-pink`, syntax highlighting pink.
 
-### Timeline / Feature Colors
-- **Thinking** (`#dfa88f`): Warm peach for "thinking" state in AI timeline.
-- **Grep** (`#9fc9a2`): Soft sage green for search/grep operations.
-- **Read** (`#9fbbe0`): Soft blue for file reading operations.
-- **Edit** (`#c0a8dd`): Soft lavender for editing operations.
+### Interactive
+- **Link Blue** (`#0072f5`): Primary link color with underline decoration.
+- **Focus Blue** (`hsla(212, 100%, 48%, 1)`): `--ds-focus-color`, focus ring on interactive elements.
+- **Ring Blue** (`rgba(147, 197, 253, 0.5)`): `--tw-ring-color`, Tailwind ring utility.
 
-### Surface Scale
-- **Surface 100** (`#f7f7f4`): Lightest button/card surface, barely tinted.
-- **Surface 200** (`#f2f1ed`): Primary page background.
-- **Surface 300** (`#ebeae5`): Button default background, subtle emphasis.
-- **Surface 400** (`#e6e5e0`): Card backgrounds, secondary surfaces.
-- **Surface 500** (`#e1e0db`): Tertiary button background, deeper emphasis.
+### Neutral Scale
+- **Gray 900** (`#171717`): Primary text, headings, nav text.
+- **Gray 600** (`#4d4d4d`): Secondary text, description copy.
+- **Gray 500** (`#666666`): Tertiary text, muted links.
+- **Gray 400** (`#808080`): Placeholder text, disabled states.
+- **Gray 100** (`#ebebeb`): Borders, card outlines, dividers.
+- **Gray 50** (`#fafafa`): Subtle surface tint, inner shadow highlight.
 
-### Border Colors
-- **Border Primary** (`oklab(0.263084 -0.00230259 0.0124794 / 0.1)`): Standard border, 10% warm brown in oklab space.
-- **Border Medium** (`oklab(0.263084 -0.00230259 0.0124794 / 0.2)`): Emphasized border, 20% warm brown.
-- **Border Strong** (`rgba(38, 37, 30, 0.55)`): Strong borders, table rules.
-- **Border Solid** (`#26251e`): Full-opacity dark border for maximum contrast.
-- **Border Light** (`#f2f1ed`): Light border matching page background.
+### Surface & Overlay
+- **Overlay Backdrop** (`hsla(0, 0%, 98%, 1)`): `--ds-overlay-backdrop-color`, modal/dialog backdrop.
+- **Selection Text** (`hsla(0, 0%, 95%, 1)`): `--geist-selection-text-color`, text selection highlight.
+- **Badge Blue Bg** (`#ebf5ff`): Pill badge background, tinted blue surface.
+- **Badge Blue Text** (`#0068d6`): Pill badge text, darker blue for readability.
 
 ### Shadows & Depth
-- **Card Shadow** (`rgba(0,0,0,0.14) 0px 28px 70px, rgba(0,0,0,0.1) 0px 14px 32px, oklab(0.263084 -0.00230259 0.0124794 / 0.1) 0px 0px 0px 1px`): Heavy elevated card with warm oklab border ring.
-- **Ambient Shadow** (`rgba(0,0,0,0.02) 0px 0px 16px, rgba(0,0,0,0.008) 0px 0px 8px`): Subtle ambient glow for floating elements.
+- **Border Shadow** (`rgba(0, 0, 0, 0.08) 0px 0px 0px 1px`): The signature — replaces traditional borders.
+- **Subtle Elevation** (`rgba(0, 0, 0, 0.04) 0px 2px 2px`): Minimal lift for cards.
+- **Card Stack** (`rgba(0,0,0,0.08) 0px 0px 0px 1px, rgba(0,0,0,0.04) 0px 2px 2px, rgba(0,0,0,0.04) 0px 8px 8px -8px, #fafafa 0px 0px 0px 1px`): Full multi-layer card shadow.
+- **Ring Border** (`rgb(235, 235, 235) 0px 0px 0px 1px`): Light gray ring-border for tabs and images.
 
 ## 3. Typography Rules
 
 ### Font Family
-- **Display/Headlines**: `CursorGothic`, with fallbacks: `CursorGothic Fallback, system-ui, Helvetica Neue, Helvetica, Arial`
-- **Body/Editorial**: `jjannon`, with fallbacks: `Iowan Old Style, Palatino Linotype, URW Palladio L, P052, ui-serif, Georgia, Cambria, Times New Roman, Times`
-- **Code/Technical**: `berkeleyMono`, with fallbacks: `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New`
-- **UI/System**: `system-ui`, with fallbacks: `-apple-system, Segoe UI, Helvetica Neue, Arial`
-- **Icons**: `CursorIcons16` (icon font at 14px and 12px)
-- **OpenType Features**: `"cswh"` on jjannon body text, `"ss09"` on CursorGothic buttons/captions
+- **Primary**: `Geist`, with fallbacks: `Arial, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol`
+- **Monospace**: `Geist Mono`, with fallbacks: `ui-monospace, SFMono-Regular, Roboto Mono, Menlo, Monaco, Liberation Mono, DejaVu Sans Mono, Courier New`
+- **OpenType Features**: `"liga"` enabled globally on all Geist text; `"tnum"` for tabular numbers on specific captions.
 
 ### Hierarchy
 
 | Role | Font | Size | Weight | Line Height | Letter Spacing | Notes |
 |------|------|------|--------|-------------|----------------|-------|
-| Display Hero | CursorGothic | 72px (4.50rem) | 400 | 1.10 (tight) | -2.16px | Maximum compression, hero statements |
-| Section Heading | CursorGothic | 36px (2.25rem) | 400 | 1.20 (tight) | -0.72px | Feature sections, CTA headlines |
-| Sub-heading | CursorGothic | 26px (1.63rem) | 400 | 1.25 (tight) | -0.325px | Card headings, sub-sections |
-| Title Small | CursorGothic | 22px (1.38rem) | 400 | 1.30 (tight) | -0.11px | Smaller titles, list headings |
-| Body Serif | jjannon | 19.2px (1.20rem) | 500 | 1.50 | normal | Editorial body with `"cswh"` |
-| Body Serif SM | jjannon | 17.28px (1.08rem) | 400 | 1.35 | normal | Standard body text, descriptions |
-| Body Sans | CursorGothic | 16px (1.00rem) | 400 | 1.50 | normal/0.08px | UI body text |
-| Button Label | CursorGothic | 14px (0.88rem) | 400 | 1.00 (tight) | normal | Primary button text |
-| Button Caption | CursorGothic | 14px (0.88rem) | 400 | 1.50 | 0.14px | Secondary button with `"ss09"` |
-| Caption | CursorGothic | 11px (0.69rem) | 400-500 | 1.50 | normal | Small captions, metadata |
-| System Heading | system-ui | 20px (1.25rem) | 700 | 1.55 | normal | System UI headings |
-| System Caption | system-ui | 13px (0.81rem) | 500-600 | 1.33 | normal | System UI labels |
-| System Micro | system-ui | 11px (0.69rem) | 500 | 1.27 (tight) | 0.048px | Uppercase micro labels |
-| Mono Body | berkeleyMono | 12px (0.75rem) | 400 | 1.67 (relaxed) | normal | Code blocks |
-| Mono Small | berkeleyMono | 11px (0.69rem) | 400 | 1.33 | -0.275px | Inline code, terminal |
-| Lato Heading | Lato | 16px (1.00rem) | 600 | 1.33 | normal | Lato section headings |
-| Lato Caption | Lato | 14px (0.88rem) | 400-600 | 1.33 | normal | Lato captions |
-| Lato Micro | Lato | 12px (0.75rem) | 400-600 | 1.27 (tight) | 0.053px | Lato small labels |
+| Display Hero | Geist | 48px (3.00rem) | 600 | 1.00–1.17 (tight) | -2.4px to -2.88px | Maximum compression, billboard impact |
+| Section Heading | Geist | 40px (2.50rem) | 600 | 1.20 (tight) | -2.4px | Feature section titles |
+| Sub-heading Large | Geist | 32px (2.00rem) | 600 | 1.25 (tight) | -1.28px | Card headings, sub-sections |
+| Sub-heading | Geist | 32px (2.00rem) | 400 | 1.50 | -1.28px | Lighter sub-headings |
+| Card Title | Geist | 24px (1.50rem) | 600 | 1.33 | -0.96px | Feature cards |
+| Card Title Light | Geist | 24px (1.50rem) | 500 | 1.33 | -0.96px | Secondary card headings |
+| Body Large | Geist | 20px (1.25rem) | 400 | 1.80 (relaxed) | normal | Introductions, feature descriptions |
+| Body | Geist | 18px (1.13rem) | 400 | 1.56 | normal | Standard reading text |
+| Body Small | Geist | 16px (1.00rem) | 400 | 1.50 | normal | Standard UI text |
+| Body Medium | Geist | 16px (1.00rem) | 500 | 1.50 | normal | Navigation, emphasized text |
+| Body Semibold | Geist | 16px (1.00rem) | 600 | 1.50 | -0.32px | Strong labels, active states |
+| Button / Link | Geist | 14px (0.88rem) | 500 | 1.43 | normal | Buttons, links, captions |
+| Button Small | Geist | 14px (0.88rem) | 400 | 1.00 (tight) | normal | Compact buttons |
+| Caption | Geist | 12px (0.75rem) | 400–500 | 1.33 | normal | Metadata, tags |
+| Mono Body | Geist Mono | 16px (1.00rem) | 400 | 1.50 | normal | Code blocks |
+| Mono Caption | Geist Mono | 13px (0.81rem) | 500 | 1.54 | normal | Code labels |
+| Mono Small | Geist Mono | 12px (0.75rem) | 500 | 1.00 (tight) | normal | `text-transform: uppercase`, technical labels |
+| Micro Badge | Geist | 7px (0.44rem) | 700 | 1.00 (tight) | normal | `text-transform: uppercase`, tiny badges |
 
 ### Principles
-- **Gothic compression for impact**: CursorGothic at display sizes uses -2.16px letter-spacing at 72px, progressively relaxing: -0.72px at 36px, -0.325px at 26px, -0.11px at 22px, normal at 16px and below. The tracking creates a sense of precision engineering.
-- **Serif for soul**: jjannon provides literary warmth. The `"cswh"` feature adds contextual swash alternates that give body text a calligraphic quality.
-- **Three typographic voices**: Gothic (display/UI), serif (editorial/body), mono (code/technical). Each serves a distinct communication purpose.
-- **Weight restraint**: CursorGothic uses weight 400 almost exclusively, relying on size and tracking for hierarchy rather than weight. System-ui components use 500-700 for functional emphasis.
+- **Compression as identity**: Geist Sans at display sizes uses -2.4px to -2.88px letter-spacing — the most aggressive negative tracking of any major design system. This creates text that feels _minified_, like code optimized for production. The tracking progressively relaxes as size decreases: -1.28px at 32px, -0.96px at 24px, -0.32px at 16px, and normal at 14px.
+- **Ligatures everywhere**: Every Geist text element enables OpenType `"liga"`. Ligatures aren't decorative — they're structural, creating tighter, more efficient glyph combinations.
+- **Three weights, strict roles**: 400 (body/reading), 500 (UI/interactive), 600 (headings/emphasis). No bold (700) except for tiny micro-badges. This narrow weight range creates hierarchy through size and tracking, not weight.
+- **Mono for identity**: Geist Mono in uppercase with `"tnum"` or `"liga"` serves as the "developer console" voice — compact technical labels that connect the marketing site to the product.
 
 ## 4. Component Stylings
 
 ### Buttons
 
-**Primary (Warm Surface)**
-- Background: `#ebeae5` (Surface 300)
-- Text: `#26251e` (Cursor Dark)
-- Padding: 10px 12px 10px 14px
-- Radius: 8px
-- Outline: none
-- Hover: text shifts to `var(--color-error)` (`#cf2d56`)
-- Focus shadow: `rgba(0,0,0,0.1) 0px 4px 12px`
-- Use: Primary actions, main CTAs
+**Primary White (Shadow-bordered)**
+- Background: `#ffffff`
+- Text: `#171717`
+- Padding: 0px 6px (minimal — content-driven width)
+- Radius: 6px (subtly rounded)
+- Shadow: `rgb(235, 235, 235) 0px 0px 0px 1px` (ring-border)
+- Hover: background shifts to `var(--ds-gray-1000)` (dark)
+- Focus: `2px solid var(--ds-focus-color)` outline + `var(--ds-focus-ring)` shadow
+- Use: Standard secondary button
 
-**Secondary Pill**
-- Background: `#e6e5e0` (Surface 400)
-- Text: `oklab(0.263 / 0.6)` (60% warm brown)
-- Padding: 3px 8px
-- Radius: full pill (33.5M px)
-- Hover: text shifts to `var(--color-error)`
-- Use: Tags, filters, secondary actions
+**Primary Dark (Inferred from Geist system)**
+- Background: `#171717`
+- Text: `#ffffff`
+- Padding: 8px 16px
+- Radius: 6px
+- Use: Primary CTA ("Start Deploying", "Get Started")
 
-**Tertiary Pill**
-- Background: `#e1e0db` (Surface 500)
-- Text: `oklab(0.263 / 0.6)` (60% warm brown)
-- Radius: full pill
-- Use: Active filter state, selected tags
+**Pill Button / Badge**
+- Background: `#ebf5ff` (tinted blue)
+- Text: `#0068d6`
+- Padding: 0px 10px
+- Radius: 9999px (full pill)
+- Font: 12px weight 500
+- Use: Status badges, tags, feature labels
 
-**Ghost (Transparent)**
-- Background: `rgba(38, 37, 30, 0.06)` (6% warm brown)
-- Text: `rgba(38, 37, 30, 0.55)` (55% warm brown)
-- Padding: 6px 12px
-- Use: Tertiary actions, dismiss buttons
-
-**Light Surface**
-- Background: `#f7f7f4` (Surface 100) or `#f2f1ed` (Surface 200)
-- Text: `#26251e` or `oklab(0.263 / 0.9)` (90%)
-- Padding: 0px 8px 1px 12px
-- Use: Dropdown triggers, subtle interactive elements
+**Large Pill (Navigation)**
+- Background: transparent or `#171717`
+- Radius: 64px–100px
+- Use: Tab navigation, section selectors
 
 ### Cards & Containers
-- Background: `#e6e5e0` or `#f2f1ed`
-- Border: `1px solid oklab(0.263 / 0.1)` (warm brown at 10%)
-- Radius: 8px (standard), 4px (compact), 10px (featured)
-- Shadow: `rgba(0,0,0,0.14) 0px 28px 70px, rgba(0,0,0,0.1) 0px 14px 32px` for elevated cards
-- Hover: shadow intensification
+- Background: `#ffffff`
+- Border: via shadow — `rgba(0, 0, 0, 0.08) 0px 0px 0px 1px`
+- Radius: 8px (standard), 12px (featured/image cards)
+- Shadow stack: `rgba(0,0,0,0.08) 0px 0px 0px 1px, rgba(0,0,0,0.04) 0px 2px 2px, #fafafa 0px 0px 0px 1px`
+- Image cards: `1px solid #ebebeb` with 12px top radius
+- Hover: subtle shadow intensification
 
 ### Inputs & Forms
-- Background: transparent or surface
-- Text: `#26251e`
-- Padding: 8px 8px 6px (textarea)
-- Border: `1px solid oklab(0.263 / 0.1)`
-- Focus: border shifts to `oklab(0.263 / 0.2)` or accent orange
+- Radio: standard styling with focus `var(--ds-gray-200)` background
+- Focus shadow: `1px 0 0 0 var(--ds-gray-alpha-600)`
+- Focus outline: `2px solid var(--ds-focus-color)` — consistent blue focus ring
+- Border: via shadow technique, not traditional border
 
 ### Navigation
-- Clean horizontal nav on warm cream background
-- Cursor logotype left-aligned (~96x24px)
-- Links: 14px CursorGothic or system-ui, weight 500
-- CTA button: warm surface with Cursor Dark text
-- Tab navigation: bottom border `1px solid oklab(0.263 / 0.1)` with active tab differentiation
+- Clean horizontal nav on white, sticky
+- Vercel logotype left-aligned, 262x52px
+- Links: Geist 14px weight 500, `#171717` text
+- Active: weight 600 or underline
+- CTA: dark pill buttons ("Start Deploying", "Contact Sales")
+- Mobile: hamburger menu collapse
+- Product dropdowns with multi-level menus
 
 ### Image Treatment
-- Code editor screenshots with `1px solid oklab(0.263 / 0.1)` border
-- Rounded corners: 8px standard
-- AI chat/timeline screenshots dominate feature sections
-- Warm gradient or solid cream backgrounds behind hero images
+- Product screenshots with `1px solid #ebebeb` border
+- Top-rounded images: `12px 12px 0px 0px` radius
+- Dashboard/code preview screenshots dominate feature sections
+- Soft gradient backgrounds behind hero images (pastel multi-color)
 
 ### Distinctive Components
 
-**AI Timeline**
-- Vertical timeline showing AI operations: thinking (peach), grep (sage), read (blue), edit (lavender)
-- Each step uses its semantic color with matching text
-- Connected with vertical lines
-- Core visual metaphor for Cursor's AI-first coding experience
+**Workflow Pipeline**
+- Three-step horizontal pipeline: Develop → Preview → Ship
+- Each step has its own accent color: Blue → Pink → Red
+- Connected with lines/arrows
+- The visual metaphor for Vercel's core value proposition
 
-**Code Editor Previews**
-- Dark code editor screenshots with warm cream border frame
-- berkeleyMono for code text
-- Syntax highlighting using timeline colors
+**Trust Bar / Logo Grid**
+- Company logos (Perplexity, ChatGPT, Cursor, etc.) in grayscale
+- Horizontal scroll or grid layout
+- Subtle `#ebebeb` border separation
 
-**Pricing Cards**
-- Warm surface backgrounds with bordered containers
-- Feature lists using jjannon serif for readability
-- CTA buttons with accent orange or primary dark styling
+**Metric Cards**
+- Large number display (e.g., "10x faster")
+- Geist 48px weight 600 for the metric
+- Description below in gray body text
+- Shadow-bordered card container
 
 ## 5. Layout Principles
 
 ### Spacing System
 - Base unit: 8px
-- Fine scale: 1.5px, 2px, 2.5px, 3px, 4px, 5px, 6px (sub-8px for micro-adjustments)
-- Standard scale: 8px, 10px, 12px, 14px (derived from extraction)
-- Extended scale (inferred): 16px, 24px, 32px, 48px, 64px, 96px
-- Notable: fine-grained sub-8px increments for precise icon/text alignment
+- Scale: 1px, 2px, 3px, 4px, 5px, 6px, 8px, 10px, 12px, 14px, 16px, 32px, 36px, 40px
+- Notable gap: jumps from 16px to 32px — no 20px or 24px in primary scale
 
 ### Grid & Container
 - Max content width: approximately 1200px
-- Hero: centered single-column with generous top padding (80-120px)
-- Feature sections: 2-3 column grids for cards and features
-- Full-width sections with warm cream or slightly darker backgrounds
-- Sidebar layouts for documentation and settings pages
+- Hero: centered single-column with generous top padding
+- Feature sections: 2–3 column grids for cards
+- Full-width dividers using `border-bottom: 1px solid #171717`
+- Code/dashboard screenshots as full-width or contained with border
 
 ### Whitespace Philosophy
-- **Warm negative space**: The cream background means whitespace has warmth and texture, unlike cold white minimalism. Large empty areas feel cozy rather than clinical.
-- **Compressed text, open layout**: Aggressive negative letter-spacing on CursorGothic headlines is balanced by generous surrounding margins. Text is dense; space around it breathes.
-- **Section variation**: Alternating surface tones (cream → lighter cream → cream) create subtle section differentiation without harsh boundaries.
+- **Gallery emptiness**: Massive vertical padding between sections (80px–120px+). The white space IS the design — it communicates that Vercel has nothing to prove and nothing to hide.
+- **Compressed text, expanded space**: The aggressive negative letter-spacing on headlines is counterbalanced by generous surrounding whitespace. The text is dense; the space around it is vast.
+- **Section rhythm**: White sections alternate with white sections — there's no color variation between sections. Separation comes from borders (shadow-borders) and spacing alone.
 
 ### Border Radius Scale
-- Micro (1.5px): Fine detail elements
-- Small (2px): Inline elements, code spans
-- Medium (3px): Small containers, inline badges
-- Standard (4px): Cards, images, compact buttons
-- Comfortable (8px): Primary buttons, cards, menus
-- Featured (10px): Larger containers, featured cards
-- Full Pill (33.5M px / 9999px): Pill buttons, tags, badges
+- Micro (2px): Inline code snippets, small spans
+- Subtle (4px): Small containers
+- Standard (6px): Buttons, links, functional elements
+- Comfortable (8px): Cards, list items
+- Image (12px): Featured cards, image containers (top-rounded)
+- Large (64px): Tab navigation pills
+- XL (100px): Large navigation links
+- Full Pill (9999px): Badges, status pills, tags
+- Circle (50%): Menu toggle, avatar containers
 
 ## 6. Depth & Elevation
 
 | Level | Treatment | Use |
 |-------|-----------|-----|
 | Flat (Level 0) | No shadow | Page background, text blocks |
-| Border Ring (Level 1) | `oklab(0.263 / 0.1) 0px 0px 0px 1px` | Standard card/container border (warm oklab) |
-| Border Medium (Level 1b) | `oklab(0.263 / 0.2) 0px 0px 0px 1px` | Emphasized borders, active states |
-| Ambient (Level 2) | `rgba(0,0,0,0.02) 0px 0px 16px, rgba(0,0,0,0.008) 0px 0px 8px` | Floating elements, subtle glow |
-| Elevated Card (Level 3) | `rgba(0,0,0,0.14) 0px 28px 70px, rgba(0,0,0,0.1) 0px 14px 32px, oklab ring` | Modals, popovers, elevated cards |
-| Focus | `rgba(0,0,0,0.1) 0px 4px 12px` on button focus | Interactive focus feedback |
+| Ring (Level 1) | `rgba(0,0,0,0.08) 0px 0px 0px 1px` | Shadow-as-border for most elements |
+| Light Ring (Level 1b) | `rgb(235,235,235) 0px 0px 0px 1px` | Lighter ring for tabs, images |
+| Subtle Card (Level 2) | Ring + `rgba(0,0,0,0.04) 0px 2px 2px` | Standard cards with minimal lift |
+| Full Card (Level 3) | Ring + Subtle + `rgba(0,0,0,0.04) 0px 8px 8px -8px` + inner `#fafafa` ring | Featured cards, highlighted panels |
+| Focus (Accessibility) | `2px solid hsla(212, 100%, 48%, 1)` outline | Keyboard focus on all interactive elements |
 
-**Shadow Philosophy**: Cursor's depth system is built around two ideas. First, borders use perceptually uniform oklab color space rather than rgba, ensuring warm brown borders look consistent across different background tones. Second, elevation shadows use dramatically large blur values (28px, 70px) with moderate opacity (0.14, 0.1), creating a diffused, atmospheric lift rather than hard-edged drop shadows. Cards don't feel like they float above the page -- they feel like the page has gently opened a space for them.
+**Shadow Philosophy**: Vercel has arguably the most sophisticated shadow system in modern web design. Rather than using shadows for elevation in the traditional Material Design sense, Vercel uses multi-value shadow stacks where each layer has a distinct architectural purpose: one creates the "border" (0px spread, 1px), another adds ambient softness (2px blur), another handles depth at distance (8px blur with negative spread), and an inner ring (`#fafafa`) creates the subtle highlight that makes the card "glow" from within. This layered approach means cards feel built, not floating.
 
 ### Decorative Depth
-- Warm cream surface variations create subtle tonal depth without shadows
-- oklab borders at 10% and 20% create a spectrum of edge definition
-- No harsh divider lines -- section separation through background tone shifts and spacing
+- Hero gradient: soft, pastel multi-color gradient wash behind hero content (barely visible, atmospheric)
+- Section borders: `1px solid #171717` (full dark line) between major sections
+- No background color variation — depth comes entirely from shadow layering and border contrast
 
-## 7. Interaction & Motion
+## 7. Do's and Don'ts
 
-### Hover States
-- Buttons: text color shifts to `--color-error` (`#cf2d56`) on hover -- a distinctive warm crimson that signals interactivity
-- Links: color shift to accent orange (`#f54e00`) or underline decoration with `rgba(38, 37, 30, 0.4)`
-- Cards: shadow intensification on hover (ambient → elevated)
+### Do
+- Use Geist Sans with aggressive negative letter-spacing at display sizes (-2.4px to -2.88px at 48px)
+- Use shadow-as-border (`0px 0px 0px 1px rgba(0,0,0,0.08)`) instead of traditional CSS borders
+- Enable `"liga"` on all Geist text — ligatures are structural, not optional
+- Use the three-weight system: 400 (body), 500 (UI), 600 (headings)
+- Apply workflow accent colors (Red/Pink/Blue) only in their workflow context
+- Use multi-layer shadow stacks for cards (border + elevation + ambient + inner highlight)
+- Keep the color palette achromatic — grays from `#171717` to `#ffffff` are the system
+- Use `#171717` instead of `#000000` for primary text — the micro-warmth matters
 
-### Focus States
-- Shadow-based focus: `rgba(0,0,0,0.1) 0px 4px 12px` for depth-based focus indication
-- Border focus: `oklab(0.263 / 0.2)` (20% border) for input/form focus
-- Consistent warm tone in all focus states -- no cold blue focus rings
-
-### Transitions
-- Color transitions: 150ms ease for text/background color changes
-- Shadow transitions: 200ms ease for elevation changes
-- Transform: subtle scale or translate for interactive feedback
+### Don't
+- Don't use positive letter-spacing on Geist Sans — it's always negative or zero
+- Don't use weight 700 (bold) on body text — 600 is the maximum, used only for headings
+- Don't use traditional CSS `border` on cards — use the shadow-border technique
+- Don't introduce warm colors (oranges, yellows, greens) into the UI chrome
+- Don't apply the workflow accent colors (Ship Red, Preview Pink, Develop Blue) decoratively
+- Don't use heavy shadows (> 0.1 opacity) — the shadow system is whisper-level
+- Don't increase body text letter-spacing — Geist is designed to run tight
+- Don't use pill radius (9999px) on primary action buttons — pills are for badges/tags only
+- Don't skip the inner `#fafafa` ring in card shadows — it's the glow that makes the system work
 
 ## 8. Responsive Behavior
 
 ### Breakpoints
 | Name | Width | Key Changes |
 |------|-------|-------------|
-| Mobile | <600px | Single column, reduced padding, stacked navigation |
-| Tablet Small | 600-768px | 2-column grids begin |
-| Tablet | 768-900px | Expanded card grids, sidebar appears |
-| Desktop Small | 900-1279px | Full layout forming |
-| Desktop | >1279px | Full layout, maximum content width |
+| Mobile Small | <400px | Tight single column, minimal padding |
+| Mobile | 400–600px | Standard mobile, stacked layout |
+| Tablet Small | 600–768px | 2-column grids begin |
+| Tablet | 768–1024px | Full card grids, expanded padding |
+| Desktop Small | 1024–1200px | Standard desktop layout |
+| Desktop | 1200–1400px | Full layout, maximum content width |
+| Large Desktop | >1400px | Centered, generous margins |
 
 ### Touch Targets
-- Buttons use comfortable padding (6px-14px vertical, 8px-14px horizontal)
-- Pill buttons maintain tap-friendly sizing with 3px-10px padding
-- Navigation links at 14px with adequate spacing for touch
+- Buttons use comfortable padding (8px–16px vertical)
+- Navigation links at 14px with adequate spacing
+- Pill badges have 10px horizontal padding for tap targets
+- Mobile menu toggle uses 50% radius circular button
 
 ### Collapsing Strategy
-- Hero: 72px CursorGothic → 36px → 26px on smaller screens, maintaining proportional letter-spacing
-- Navigation: horizontal links → hamburger menu on mobile
+- Hero: display 48px → scales down, maintains negative tracking proportionally
+- Navigation: horizontal links + CTAs → hamburger menu
 - Feature cards: 3-column → 2-column → single column stacked
-- Code editor screenshots: maintain aspect ratio, may shrink with border treatment preserved
-- Timeline visualization: horizontal → vertical stacking
-- Section spacing: 80px+ → 48px → 32px on mobile
+- Code screenshots: maintain aspect ratio, may horizontally scroll
+- Trust bar logos: grid → horizontal scroll
+- Footer: multi-column → stacked single column
+- Section spacing: 80px+ → 48px on mobile
 
 ### Image Behavior
-- Editor screenshots maintain warm border treatment at all sizes
-- AI timeline adapts from horizontal to vertical layout
+- Dashboard screenshots maintain border treatment at all sizes
+- Hero gradient softens/simplifies on mobile
 - Product screenshots use responsive images with consistent border radius
-- Full-width hero images scale proportionally
+- Full-width sections maintain edge-to-edge treatment
 
 ## 9. Agent Prompt Guide
 
 ### Quick Color Reference
-- Primary CTA background: `#ebeae5` (warm cream button)
-- Page background: `#f2f1ed` (warm off-white)
-- Text color: `#26251e` (warm near-black)
-- Secondary text: `rgba(38, 37, 30, 0.55)` (55% warm brown)
-- Accent: `#f54e00` (orange)
-- Error/hover: `#cf2d56` (warm crimson)
-- Success: `#1f8a65` (muted teal)
-- Border: `oklab(0.263084 -0.00230259 0.0124794 / 0.1)` or `rgba(38, 37, 30, 0.1)` as fallback
+- Primary CTA: Vercel Black (`#171717`)
+- Background: Pure White (`#ffffff`)
+- Heading text: Vercel Black (`#171717`)
+- Body text: Gray 600 (`#4d4d4d`)
+- Border (shadow): `rgba(0, 0, 0, 0.08) 0px 0px 0px 1px`
+- Link: Link Blue (`#0072f5`)
+- Focus ring: Focus Blue (`hsla(212, 100%, 48%, 1)`)
 
 ### Example Component Prompts
-- "Create a hero section on `#f2f1ed` warm cream background. Headline at 72px CursorGothic weight 400, line-height 1.10, letter-spacing -2.16px, color `#26251e`. Subtitle at 17.28px jjannon weight 400, line-height 1.35, color `rgba(38,37,30,0.55)`. Primary CTA button (`#ebeae5` bg, 8px radius, 10px 14px padding) with hover text shift to `#cf2d56`."
-- "Design a card: `#e6e5e0` background, border `1px solid rgba(38,37,30,0.1)`. Radius 8px. Title at 22px CursorGothic weight 400, letter-spacing -0.11px. Body at 17.28px jjannon weight 400, color `rgba(38,37,30,0.55)`. Use `#f54e00` for link accents."
-- "Build a pill tag: `#e6e5e0` background, `rgba(38,37,30,0.6)` text, full-pill radius (9999px), 3px 8px padding, 14px CursorGothic weight 400."
-- "Create navigation: sticky `#f2f1ed` background with backdrop-filter blur. 14px system-ui weight 500 for links, `#26251e` text. CTA button right-aligned with `#ebeae5` bg and 8px radius. Bottom border `1px solid rgba(38,37,30,0.1)`."
-- "Design an AI timeline showing four steps: Thinking (`#dfa88f`), Grep (`#9fc9a2`), Read (`#9fbbe0`), Edit (`#c0a8dd`). Each step: 14px system-ui label + 16px CursorGothic description + vertical connecting line in `rgba(38,37,30,0.1)`."
+- "Create a hero section on white background. Headline at 48px Geist weight 600, line-height 1.00, letter-spacing -2.4px, color #171717. Subtitle at 20px Geist weight 400, line-height 1.80, color #4d4d4d. Dark CTA button (#171717, 6px radius, 8px 16px padding) and ghost button (white, shadow-border rgba(0,0,0,0.08) 0px 0px 0px 1px, 6px radius)."
+- "Design a card: white background, no CSS border. Use shadow stack: rgba(0,0,0,0.08) 0px 0px 0px 1px, rgba(0,0,0,0.04) 0px 2px 2px, #fafafa 0px 0px 0px 1px. Radius 8px. Title at 24px Geist weight 600, letter-spacing -0.96px. Body at 16px weight 400, #4d4d4d."
+- "Build a pill badge: #ebf5ff background, #0068d6 text, 9999px radius, 0px 10px padding, 12px Geist weight 500."
+- "Create navigation: white sticky header. Geist 14px weight 500 for links, #171717 text. Dark pill CTA 'Start Deploying' right-aligned. Shadow-border on bottom: rgba(0,0,0,0.08) 0px 0px 0px 1px."
+- "Design a workflow section showing three steps: Develop (text color #0a72ef), Preview (#de1d8d), Ship (#ff5b4f). Each step: 14px Geist Mono uppercase label + 24px Geist weight 600 title + 16px weight 400 description in #4d4d4d."
 
 ### Iteration Guide
-1. Always use warm tones -- `#f2f1ed` background, `#26251e` text, never pure white/black for primary surfaces
-2. Letter-spacing scales with font size for CursorGothic: -2.16px at 72px, -0.72px at 36px, -0.325px at 26px, normal at 16px
-3. Use `rgba(38, 37, 30, alpha)` as a CSS-compatible fallback for oklab borders
-4. Three fonts, three voices: CursorGothic (display/UI), jjannon (editorial), berkeleyMono (code)
-5. Pill shapes (9999px radius) for tags and filters; 8px radius for primary buttons and cards
-6. Hover states use `#cf2d56` text color -- the warm crimson shift is a signature interaction
-7. Shadows use large blur values (28px, 70px) for diffused atmospheric depth
-8. The sub-8px spacing scale (1.5, 2, 2.5, 3, 4, 5, 6px) is critical for icon/text micro-alignment
+1. Always use shadow-as-border instead of CSS border — `0px 0px 0px 1px rgba(0,0,0,0.08)` is the foundation
+2. Letter-spacing scales with font size: -2.4px at 48px, -1.28px at 32px, -0.96px at 24px, normal at 14px
+3. Three weights only: 400 (read), 500 (interact), 600 (announce)
+4. Color is functional, never decorative — workflow colors (Red/Pink/Blue) mark pipeline stages only
+5. The inner `#fafafa` ring in card shadows is what gives Vercel cards their subtle inner glow
+6. Geist Mono uppercase for technical labels, Geist Sans for everything else
