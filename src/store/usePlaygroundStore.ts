@@ -38,6 +38,29 @@ export interface CodeContent {
 	lastModified: Date;
 }
 
+export interface FloatingPanelState {
+	tabId: string;
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	zIndex: number;
+}
+
+export interface PanelLayoutState {
+	tabOrder: string[];
+	floatingPanels: FloatingPanelState[];
+}
+
+const DEFAULT_TAB_ORDER = [
+	"output",
+	"tests",
+	"problems",
+	"predefined",
+	"trace",
+	"debugger",
+];
+
 interface PlaygroundState extends MultiFileState {
 	// 代码内容 (保持向后兼容)
 	code: string;
@@ -115,6 +138,25 @@ interface PlaygroundState extends MultiFileState {
 	) => void;
 	setBreakpoints: (breakpoints: number[]) => void;
 	clearDebugState: () => void;
+
+	// Panel layout
+	panelLayout: PanelLayoutState;
+	setPanelLayout: (layout: PanelLayoutState) => void;
+	updateTabOrder: (tabOrder: string[]) => void;
+	floatTab: (
+		tabId: string,
+		x: number,
+		y: number,
+		width?: number,
+		height?: number,
+	) => void;
+	dockTab: (tabId: string, insertIndex?: number) => void;
+	updateFloatingPanel: (
+		tabId: string,
+		updates: Partial<Pick<FloatingPanelState, "x" | "y" | "width" | "height">>,
+	) => void;
+	bringFloatingPanelToFront: (tabId: string) => void;
+	resetPanelLayout: () => void;
 
 	// 持久化
 	loadFromStorage: () => void;
@@ -374,6 +416,11 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 	debugCallStack: null,
 	breakpoints: [],
 
+	panelLayout: {
+		tabOrder: DEFAULT_TAB_ORDER,
+		floatingPanels: [],
+	},
+
 	// Sync state
 	syncToken: null,
 	syncSalt: null,
@@ -529,6 +576,78 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 			debugVariables: null,
 			debugCallStack: null,
 		});
+	},
+
+	setPanelLayout: (layout) => {
+		set({ panelLayout: layout });
+		get().saveToStorage();
+	},
+	updateTabOrder: (tabOrder) => {
+		set({ panelLayout: { ...get().panelLayout, tabOrder } });
+		get().saveToStorage();
+	},
+	floatTab: (tabId, x, y, width = 500, height = 400) => {
+		const { panelLayout } = get();
+		const maxZ = panelLayout.floatingPanels.reduce(
+			(max, p) => Math.max(max, p.zIndex),
+			0,
+		);
+		const floatingPanels = [
+			...panelLayout.floatingPanels.filter((p) => p.tabId !== tabId),
+			{ tabId, x, y, width, height, zIndex: maxZ + 1 },
+		];
+		set({
+			panelLayout: {
+				...panelLayout,
+				tabOrder: panelLayout.tabOrder.filter((t) => t !== tabId),
+				floatingPanels,
+			},
+		});
+		get().saveToStorage();
+	},
+	dockTab: (tabId, insertIndex) => {
+		const { panelLayout } = get();
+		const floatingPanels = panelLayout.floatingPanels.filter(
+			(p) => p.tabId !== tabId,
+		);
+		const tabOrder = [...panelLayout.tabOrder];
+		const existingIdx = tabOrder.indexOf(tabId);
+		if (existingIdx === -1) {
+			if (
+				insertIndex !== undefined &&
+				insertIndex >= 0 &&
+				insertIndex <= tabOrder.length
+			) {
+				tabOrder.splice(insertIndex, 0, tabId);
+			} else {
+				tabOrder.push(tabId);
+			}
+		}
+		set({ panelLayout: { tabOrder, floatingPanels } });
+		get().saveToStorage();
+	},
+	updateFloatingPanel: (tabId, updates) => {
+		const { panelLayout } = get();
+		const floatingPanels = panelLayout.floatingPanels.map((p) =>
+			p.tabId === tabId ? { ...p, ...updates } : p,
+		);
+		set({ panelLayout: { ...panelLayout, floatingPanels } });
+		get().saveToStorage();
+	},
+	bringFloatingPanelToFront: (tabId) => {
+		const { panelLayout } = get();
+		const maxZ = panelLayout.floatingPanels.reduce(
+			(max, p) => Math.max(max, p.zIndex),
+			0,
+		);
+		const floatingPanels = panelLayout.floatingPanels.map((p) =>
+			p.tabId === tabId ? { ...p, zIndex: maxZ + 1 } : p,
+		);
+		set({ panelLayout: { ...panelLayout, floatingPanels } });
+	},
+	resetPanelLayout: () => {
+		set({ panelLayout: { tabOrder: DEFAULT_TAB_ORDER, floatingPanels: [] } });
+		get().saveToStorage();
 	},
 
 	// Sync actions
@@ -800,10 +919,13 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 
 			// 保存UI状态
 			const { isFileExplorerOpen, fileExplorerWidth, expandedFolders } = get();
+			const { panelLayout } = get();
 			const uiState = {
 				isFileExplorerOpen,
 				fileExplorerWidth,
 				expandedFolders: Array.from(expandedFolders),
+				tabOrder: panelLayout.tabOrder,
+				floatingPanels: panelLayout.floatingPanels,
 			};
 			localStorage.setItem(STORAGE_KEYS.UI_STATE, JSON.stringify(uiState));
 
@@ -891,6 +1013,10 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 					isFileExplorerOpen: uiState?.isFileExplorerOpen ?? true,
 					fileExplorerWidth: uiState?.fileExplorerWidth ?? 250,
 					expandedFolders: new Set(uiState?.expandedFolders || []),
+					panelLayout: {
+						tabOrder: uiState?.tabOrder || DEFAULT_TAB_ORDER,
+						floatingPanels: uiState?.floatingPanels || [],
+					},
 				});
 
 				// 保存默认工作空间
@@ -923,6 +1049,10 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 					isFileExplorerOpen: uiState?.isFileExplorerOpen ?? true,
 					fileExplorerWidth: uiState?.fileExplorerWidth ?? 250,
 					expandedFolders: new Set(uiState?.expandedFolders || []),
+					panelLayout: {
+						tabOrder: uiState?.tabOrder || DEFAULT_TAB_ORDER,
+						floatingPanels: uiState?.floatingPanels || [],
+					},
 				});
 			}
 		} catch (error) {
@@ -938,6 +1068,10 @@ export const usePlaygroundStore = create<PlaygroundState>((set, get) => ({
 				isFileExplorerOpen: true,
 				fileExplorerWidth: 250,
 				expandedFolders: new Set(),
+				panelLayout: {
+					tabOrder: DEFAULT_TAB_ORDER,
+					floatingPanels: [],
+				},
 			});
 		}
 	},
